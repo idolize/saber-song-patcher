@@ -7,5 +7,6 @@
   "downloadUrl": "https://www.amazon.com/dp/B08FCZ6J55/",
   "patches": [
     { "type": "insertSilence", "payload": [12345, 20] },
+    { "type": "fadeIn", "payload": [12345, 67890] }
   ]
 }
