@@ -1,12 +1,18 @@
 {
   "schemaVersion": 1,
-  "sha256": "xxxxx",
   "lengthMs": 12345,
-  "forceStrictCheck": false,
   "notes": "Please download version X from Amazon Music",
-  "downloadUrl": "https://www.amazon.com/dp/B08FCZ6J55/",
+  "downloadUrls": [
+    "https://www.amazon.com/dp/B08FCZ6J55/"
+  ],
+  "knownGoodHashes": [
+    { "type": "sha256", "hash": "xxxxx" }
+  ],
+  "fingerprint": {
+    "startAtSecond": 3
+  },
   "patches": [
-    { "type": "insertSilence", "payload": [12345, 20] },
-    { "type": "fadeIn", "payload": [12345, 67890] }
+    { "type": "insertSilence", "startMs": 12345, "durationMs": 20 },
+    { "type": "fadeIn", "startMs": 12345, "endMs": 67890 }
   ]
 }
