@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace SaberSongPatcher
 {
@@ -12,7 +9,7 @@ namespace SaberSongPatcher
         {
             try
             {
-                // deserialize JSON directly from a file
+                // Deserialize JSON directly from a file
                 using (StreamReader file = File.OpenText(Context.CONFIG_FILE))
                 {
                     JsonSerializer serializer = new JsonSerializer();
@@ -31,7 +28,7 @@ namespace SaberSongPatcher
         {
             if (config.IsChanged)
             {
-                // serialize JSON directly to a file
+                // Serialize JSON directly to a file
                 using (StreamWriter file = File.CreateText(Context.CONFIG_FILE))
                 {
                     JsonSerializer serializer = new JsonSerializer();

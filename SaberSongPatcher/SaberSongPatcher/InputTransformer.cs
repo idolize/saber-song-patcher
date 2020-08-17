@@ -5,7 +5,8 @@ using System.Reflection;
 using Xabe.FFmpeg;
 
 using FFmpegApi = Xabe.FFmpeg.FFmpeg;
-
+using System.Diagnostics;
+using Xabe.FFmpeg.Exceptions;
 
 namespace SaberSongPatcher
 {
@@ -18,30 +19,45 @@ namespace SaberSongPatcher
             this.context = context;
         }
 
-        public static async Task ConvertToOgg(string input, string output)
+        public async Task<bool> ConvertToOgg(string input, string output)
         {
             if (File.Exists(output))
             {
-                // Do we want to overwrite the file?
-                return;
+                // Overwrite the file
+                context.Tracer.TraceInformation($"Deleting existing output file '{output}'");
+                File.Delete(output);
             }
 
             // Set directory where the app should look for FFmpeg executables
             // based on https://github.com/AddictedCS/soundfingerprinting/wiki/Supported-Audio-Formats
-            string ffmpegPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "FFmpeg\\bin\\x64");
+            string ffmpegPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "FFmpeg\\bin\\x64");
             FFmpegApi.SetExecutablesPath(ffmpegPath);
 
             IMediaInfo info = await FFmpegApi.GetMediaInfo(input);
-            IStream audioStream = info.AudioStreams.FirstOrDefault()
+            IStream? audioStream = info.AudioStreams.FirstOrDefault()
                 ?.SetCodec(AudioCodec.libvorbis);
 
-            await FFmpegApi.Conversions.New()
-                .AddStream(audioStream)
-                .SetOutput(output)
-                .Start();
+            if (audioStream == null)
+            {
+                context.Tracer.TraceEvent(TraceEventType.Error, (int)Context.StatusCodes.ERROR_NO_AUDIO_STREAM, "No valid audio stream in file");
+                return false;
+            }
+
+            try
+            {
+                await FFmpegApi.Conversions.New()
+                    .AddStream(audioStream)
+                    .SetOutput(output)
+                    .Start();
+            } catch (ConversionException ex)
+            {
+                context.Tracer.TraceEvent(TraceEventType.Error, (int)Context.StatusCodes.ERROR_FFMPEG_FAILED, ex.Message);
+                return false;
+            }
+            return true;
         }
 
-        public async Task TransformInput(string input)
+        public async Task<bool> TransformInput(string input)
         {
             // TODO 1. Apply patches from config
 
@@ -52,10 +68,10 @@ namespace SaberSongPatcher
             if (".ogg".Equals(extension))
             {
                 // TODO if there were any patches applied we will still need to do this
-                return;
+                return true;
             }
 
-            await ConvertToOgg(input, $"{fileName}.ogg");
+            return await ConvertToOgg(input, $"{fileName}.ogg");
         }
     }
 }

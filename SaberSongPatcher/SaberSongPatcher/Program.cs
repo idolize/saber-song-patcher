@@ -1,12 +1,9 @@
-﻿using NAudio.Wave;
-using System;
-using System.IO;
+﻿using System;
 
 using System.Threading.Tasks;
-using SoundFingerprinting;
-using SoundFingerprinting.Audio;
-using SoundFingerprinting.InMemory;
-using SoundFingerprinting.Builder;
+using System.Diagnostics;
+using CommandLine;
+
 namespace SaberSongPatcher
 {
     class Program
@@ -28,29 +25,42 @@ namespace SaberSongPatcher
             var config = ConfigParser.ParseConfig();
             var context = new Context(config);
 
-            var hashCalculator = new HashCalculator(context);
-            var inputValidator = new InputValidator(context);
-            var inputTransformer = new InputTransformer(context);
-
-            Console.WriteLine("Saving hashes...");
-            hashCalculator.SaveHashesFromMaster(masterFilename);
-
-            Console.WriteLine("Validating audio...");
-            var seemsCorrect = await inputValidator.ValidateInput(inputFilename);
-            if (!seemsCorrect)
+            try
             {
-                Console.WriteLine("Song does not seem to be correct.");
-                return 1;
+                var hashCalculator = new HashCalculator(context);
+                var inputValidator = new InputValidator(context);
+                var inputTransformer = new InputTransformer(context);
+
+                context.Tracer.TraceInformation("Saving hashes...");
+                hashCalculator.SaveHashesFromMaster(masterFilename);
+
+                context.Tracer.TraceInformation("Validating audio...");
+                var seemsCorrect = await inputValidator.ValidateInput(inputFilename);
+                if (!seemsCorrect)
+                {
+                    context.Tracer.TraceInformation("Song does not seem to be correct.");
+                    return 1;
+                }
+
+                context.Tracer.TraceInformation("Transforming audio...");
+                await inputTransformer.TransformInput(inputFilename);
+
+                context.Tracer.TraceInformation("Updating config...");
+                ConfigParser.FlushConfigChanges(config);
+
+                context.Tracer.TraceInformation("Done!");
+                return 0;
             }
-
-            Console.WriteLine("Transforming audio...");
-            await inputTransformer.TransformInput(inputFilename);
-
-            Console.WriteLine("Updating config...");
-            ConfigParser.FlushConfigChanges(config);
-
-            Console.WriteLine("Done!");
-            return 0;
+            catch (Exception ex)
+            {
+                context.Tracer.TraceEvent(TraceEventType.Critical, (int)Context.StatusCodes.ERROR_UNKNOWN, ex.Message);
+                return 2;
+            }
+            finally
+            {
+                context.Tracer.Flush();
+                context.Tracer.Close();
+            }
         }
     }
 }

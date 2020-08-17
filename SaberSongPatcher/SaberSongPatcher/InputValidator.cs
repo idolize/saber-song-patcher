@@ -8,11 +8,15 @@ using SoundFingerprinting.Data;
 using SoundFingerprinting.Emy;
 using System.IO;
 using ProtoBuf;
+using System.Diagnostics;
 
 namespace SaberSongPatcher
 {
     class InputValidator
     {
+        private static readonly int SECONDS_TO_ANALYZE = 10; // number of seconds to analyze from query file
+        private static readonly double CONFIDENCE_THRESHOLD = 0.9; // how confident we need to be to consider it a match
+
         private readonly Context context;
 
         public InputValidator(Context context)
@@ -37,7 +41,8 @@ namespace SaberSongPatcher
                 }
             } catch (SystemException ex)
             {
-                Console.WriteLine($"Failed to access fingerprint file: {ex.Message}");
+                context.Tracer.TraceEvent(TraceEventType.Error,
+                    (int)Context.StatusCodes.ERROR_FILE_ACCESS, $"Failed to access fingerprint file: {ex.Message}");
                 return false;
             }
 
@@ -45,17 +50,19 @@ namespace SaberSongPatcher
             var track = new TrackInfo("123", "Test Song", "Test Artist");
             modelService.Insert(track, fingerprints);
 
-            int secondsToAnalyze = 10; // number of seconds to analyze from query file
             double startAtSecond = context.Config.Fingerprint?.StartAtSecond ?? 0;
+            context.Tracer.TraceEvent(TraceEventType.Verbose,
+                    (int)Context.StatusCodes.GENERAL, $"Analyzing ${SECONDS_TO_ANALYZE} seconds of audio starting at {startAtSecond} seconds");
 
             var queryResult = await QueryCommandBuilder.Instance.BuildQueryCommand()
-                                                 .From(queryAudioFile, secondsToAnalyze, startAtSecond)
+                                                 .From(queryAudioFile, SECONDS_TO_ANALYZE, startAtSecond)
                                                  .UsingServices(modelService, audioService)
                                                  .Query();
 
             var match = queryResult.BestMatch;
             if (match == null)
             {
+                context.Tracer.TraceInformation("No fingerprint match found");
                 return false;
             }
 
@@ -67,7 +74,11 @@ namespace SaberSongPatcher
             //Console.WriteLine("CoverageLength=" + match.CoverageLength);
             //Console.WriteLine("TrackStartsAt=" + match.TrackStartsAt);
             //Console.WriteLine("TrackMatchStartsAt=" + match.TrackMatchStartsAt);
-            return match.Confidence > 0.9;
+            context.Tracer.TraceData(TraceEventType.Verbose, (int)Context.StatusCodes.MATCH_FOUND, match);
+            context.Tracer.TraceEvent(TraceEventType.Verbose,
+                    (int)Context.StatusCodes.GENERAL,
+                    $"Confidence {match.Confidence} < {CONFIDENCE_THRESHOLD} = {match.Confidence < CONFIDENCE_THRESHOLD}");
+            return match.Confidence > CONFIDENCE_THRESHOLD;
         }
 
         public async Task<bool> ValidateInput(string queryAudioFile)
@@ -86,7 +97,7 @@ namespace SaberSongPatcher
                             if (knownHash.Hash.Equals(sha256))
                             {
                                 // The file matches by hash so we know it is definitely valid
-                                //Console.WriteLine("Match of SHA256 " + sha256);
+                                context.Tracer.TraceInformation($"Match of SHA256 {sha256}");
                                 return true;
                             }
                         }
@@ -94,7 +105,8 @@ namespace SaberSongPatcher
                 }
                 catch (SystemException ex)
                 {
-                    Console.WriteLine($"Failed to access file: {ex.Message}");
+                    context.Tracer.TraceEvent(TraceEventType.Error,
+                        (int)Context.StatusCodes.ERROR_FILE_ACCESS, $"Failed to hash file: {ex.Message}");
                     return false;
                 }
             }
