@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30406.217
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaberSongPatcher", "SaberSongPatcher\SaberSongPatcher.csproj", "{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8B6EB6AB-D632-4E93-86EB-EF4FDA7AB206}
+	EndGlobalSection
+EndGlobal
