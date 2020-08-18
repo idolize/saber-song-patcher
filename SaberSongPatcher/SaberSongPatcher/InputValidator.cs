@@ -8,12 +8,13 @@ using SoundFingerprinting.Data;
 using SoundFingerprinting.Emy;
 using System.IO;
 using ProtoBuf;
-using System.Diagnostics;
 
 namespace SaberSongPatcher
 {
     class InputValidator
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private static readonly int SECONDS_TO_ANALYZE = 10; // number of seconds to analyze from query file
         private static readonly double CONFIDENCE_THRESHOLD = 0.9; // how confident we need to be to consider it a match
 
@@ -41,8 +42,7 @@ namespace SaberSongPatcher
                 }
             } catch (SystemException ex)
             {
-                context.Tracer.TraceEvent(TraceEventType.Error,
-                    (int)Context.StatusCodes.ERROR_FILE_ACCESS, $"Failed to access fingerprint file: {ex.Message}");
+                Logger.Error(ex, "Failed to access fingerprint file");
                 return false;
             }
 
@@ -51,8 +51,7 @@ namespace SaberSongPatcher
             modelService.Insert(track, fingerprints);
 
             double startAtSecond = context.Config.Fingerprint?.StartAtSecond ?? 0;
-            context.Tracer.TraceEvent(TraceEventType.Verbose,
-                    (int)Context.StatusCodes.GENERAL, $"Analyzing ${SECONDS_TO_ANALYZE} seconds of audio starting at {startAtSecond} seconds");
+            Logger.Debug($"Analyzing ${SECONDS_TO_ANALYZE} seconds of audio starting at {startAtSecond} seconds");
 
             var queryResult = await QueryCommandBuilder.Instance.BuildQueryCommand()
                                                  .From(queryAudioFile, SECONDS_TO_ANALYZE, startAtSecond)
@@ -62,22 +61,19 @@ namespace SaberSongPatcher
             var match = queryResult.BestMatch;
             if (match == null)
             {
-                context.Tracer.TraceInformation("No fingerprint match found");
+                Logger.Debug("No fingerprint match found");
                 return false;
             }
 
-            //Console.WriteLine("Match found! Confidence=" + match.Confidence);
-            //Console.WriteLine("QueryRelativeCoverage=" + match.QueryRelativeCoverage);
-            //Console.WriteLine("NoGaps=" + match.NoGaps);
-            //Console.WriteLine("DiscreteCoverageLength=" + match.DiscreteCoverageLength);
-            //Console.WriteLine("CoverageWithPermittedGapsLength=" + match.CoverageWithPermittedGapsLength);
-            //Console.WriteLine("CoverageLength=" + match.CoverageLength);
-            //Console.WriteLine("TrackStartsAt=" + match.TrackStartsAt);
-            //Console.WriteLine("TrackMatchStartsAt=" + match.TrackMatchStartsAt);
-            context.Tracer.TraceData(TraceEventType.Verbose, (int)Context.StatusCodes.MATCH_FOUND, match);
-            context.Tracer.TraceEvent(TraceEventType.Verbose,
-                    (int)Context.StatusCodes.GENERAL,
-                    $"Confidence {match.Confidence} < {CONFIDENCE_THRESHOLD} = {match.Confidence < CONFIDENCE_THRESHOLD}");
+            Logger.Debug("Match found!");
+            Logger.Debug($"Confidence {match.Confidence} < {CONFIDENCE_THRESHOLD} = {match.Confidence < CONFIDENCE_THRESHOLD}");
+            Logger.Debug("QueryRelativeCoverage=" + match.QueryRelativeCoverage);
+            Logger.Debug("DiscreteCoverageLength=" + match.DiscreteCoverageLength);
+            Logger.Debug("CoverageWithPermittedGapsLength=" + match.CoverageWithPermittedGapsLength);
+            Logger.Debug("CoverageLength=" + match.CoverageLength);
+            Logger.Debug("TrackStartsAt=" + match.TrackStartsAt);
+            Logger.Debug("TrackMatchStartsAt=" + match.TrackMatchStartsAt);
+
             return match.Confidence > CONFIDENCE_THRESHOLD;
         }
 
@@ -92,12 +88,12 @@ namespace SaberSongPatcher
 
                     foreach (var knownHash in context.Config.KnownGoodHashes)
                     {
-                        if (knownHash.Type != null && "sha256".Equals(knownHash.Type.ToLower()))
+                        if (knownHash.Type != null && Config.SHA_256_HASH.Equals(knownHash.Type.ToLower()))
                         {
                             if (knownHash.Hash.Equals(sha256))
                             {
                                 // The file matches by hash so we know it is definitely valid
-                                context.Tracer.TraceInformation($"Match of SHA256 {sha256}");
+                                Logger.Debug($"Match of SHA256 {sha256}");
                                 return true;
                             }
                         }
@@ -105,8 +101,7 @@ namespace SaberSongPatcher
                 }
                 catch (SystemException ex)
                 {
-                    context.Tracer.TraceEvent(TraceEventType.Error,
-                        (int)Context.StatusCodes.ERROR_FILE_ACCESS, $"Failed to hash file: {ex.Message}");
+                    Logger.Error(ex, "Failed to hash file");
                     return false;
                 }
             }

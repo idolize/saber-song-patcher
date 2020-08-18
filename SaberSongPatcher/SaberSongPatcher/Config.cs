@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace SaberSongPatcher
 {
     class Config
     {
+        public static readonly string SHA_256_HASH = "sha256";
+
         public class FingerprintConfig
         {
             [JsonProperty("startAtSecond")]
@@ -15,17 +18,17 @@ namespace SaberSongPatcher
         public class KnownGoodHash : IEquatable<KnownGoodHash>
         {
             [JsonProperty("type")]
-            public string Type { get; set; }
+            public string Type { get; set; } = SHA_256_HASH;
 
             [JsonProperty("hash")]
-            public string Hash { get; set; }
+            public string Hash { get; set; } = string.Empty;
 
-            public override bool Equals(object obj)
+            public override bool Equals([AllowNull] object obj)
             {
                 return Equals(obj as KnownGoodHash);
             }
 
-            public bool Equals(KnownGoodHash other)
+            public bool Equals([AllowNull] KnownGoodHash other)
             {
                 return other != null &&
                        Hash == other.Hash;
@@ -49,13 +52,13 @@ namespace SaberSongPatcher
         public string Notes { get; set; } = string.Empty;
 
         [JsonProperty("downloadUrls")]
-        public IList<string> DownloadUrls { get; set; }
+        public IList<string> DownloadUrls { get; set; } = new List<string>();
 
         [JsonProperty("fingerprint")]
-        public FingerprintConfig Fingerprint { get; set; }
+        public FingerprintConfig? Fingerprint { get; set; }
 
         [JsonProperty("knownGoodHashes")]
-        public IList<KnownGoodHash> KnownGoodHashes { get; set; }
+        public IList<KnownGoodHash> KnownGoodHashes { get; set; } = new List<KnownGoodHash>();
 
         //[JsonProperty("patches")]
         //public IList<string> Patches { get; set; }

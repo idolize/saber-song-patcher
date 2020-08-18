@@ -3,15 +3,16 @@ using System.Linq;
 using System.IO;
 using System.Reflection;
 using Xabe.FFmpeg;
+using Xabe.FFmpeg.Exceptions;
 
 using FFmpegApi = Xabe.FFmpeg.FFmpeg;
-using System.Diagnostics;
-using Xabe.FFmpeg.Exceptions;
 
 namespace SaberSongPatcher
 {
     class InputTransformer
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private readonly Context context;
 
         public InputTransformer(Context context)
@@ -24,7 +25,7 @@ namespace SaberSongPatcher
             if (File.Exists(output))
             {
                 // Overwrite the file
-                context.Tracer.TraceInformation($"Deleting existing output file '{output}'");
+                Logger.Debug($"Deleting existing output file '{output}'");
                 File.Delete(output);
             }
 
@@ -39,7 +40,7 @@ namespace SaberSongPatcher
 
             if (audioStream == null)
             {
-                context.Tracer.TraceEvent(TraceEventType.Error, (int)Context.StatusCodes.ERROR_NO_AUDIO_STREAM, "No valid audio stream in file");
+                Logger.Error("No valid audio stream in file");
                 return false;
             }
 
@@ -51,7 +52,7 @@ namespace SaberSongPatcher
                     .Start();
             } catch (ConversionException ex)
             {
-                context.Tracer.TraceEvent(TraceEventType.Error, (int)Context.StatusCodes.ERROR_FFMPEG_FAILED, ex.Message);
+                Logger.Error(ex, "Failed to convert to OGG");
                 return false;
             }
             return true;
@@ -68,6 +69,7 @@ namespace SaberSongPatcher
             if (".ogg".Equals(extension))
             {
                 // TODO if there were any patches applied we will still need to do this
+                Logger.Debug("Audio input already in OGG format");
                 return true;
             }
 

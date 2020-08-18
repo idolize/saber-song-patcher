@@ -1,5 +1,4 @@
 ﻿using System;
-
 using System.Threading.Tasks;
 using System.Diagnostics;
 using CommandLine;
@@ -8,58 +7,57 @@ namespace SaberSongPatcher
 {
     class Program
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         static async Task<int> Main(string[] args)
         {
             // TODO parse arguments better (e.g. allow for operation names or flags)
             var expectedArgsNum = 3;
             if (args.Length < expectedArgsNum)
             {
-                Console.WriteLine("Please enter " + expectedArgsNum + " arguments.");
+                Logger.Error("Please enter " + expectedArgsNum + " arguments.");
                 return 1;
             }
             // TODO store these on context?
             var inputFilename = args[0];
             var outputFilename = args[1];
-            var masterFilename = args[3];
-            
-            var config = ConfigParser.ParseConfig();
-            var context = new Context(config);
+            var masterFilename = args[2];
 
             try
             {
+                var config = ConfigParser.ParseConfig();
+                var context = new Context(config);
                 var hashCalculator = new HashCalculator(context);
                 var inputValidator = new InputValidator(context);
                 var inputTransformer = new InputTransformer(context);
 
-                context.Tracer.TraceInformation("Saving hashes...");
+                
                 hashCalculator.SaveHashesFromMaster(masterFilename);
 
-                context.Tracer.TraceInformation("Validating audio...");
+                Logger.Info("Validating audio...");
                 var seemsCorrect = await inputValidator.ValidateInput(inputFilename);
                 if (!seemsCorrect)
                 {
-                    context.Tracer.TraceInformation("Song does not seem to be correct.");
+                    Logger.Warn("Song does not match expectation for this map.");
                     return 1;
                 }
 
-                context.Tracer.TraceInformation("Transforming audio...");
+                Logger.Info("Transforming audio...");
                 await inputTransformer.TransformInput(inputFilename);
 
-                context.Tracer.TraceInformation("Updating config...");
-                ConfigParser.FlushConfigChanges(config);
+                ConfigParser.FlushConfigChanges(context.Config);
 
-                context.Tracer.TraceInformation("Done!");
+                Logger.Info("Done!");
                 return 0;
             }
             catch (Exception ex)
             {
-                context.Tracer.TraceEvent(TraceEventType.Critical, (int)Context.StatusCodes.ERROR_UNKNOWN, ex.Message);
+                Logger.Error(ex);
                 return 2;
             }
             finally
             {
-                context.Tracer.Flush();
-                context.Tracer.Close();
+                NLog.LogManager.Shutdown();
             }
         }
     }

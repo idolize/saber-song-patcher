@@ -11,6 +11,8 @@ namespace SaberSongPatcher
 {
     class HashCalculator
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private readonly Context context;
 
         public HashCalculator(Context context)
@@ -42,21 +44,24 @@ namespace SaberSongPatcher
 
         public async void SaveHashesFromMaster(string masterAudioFile)
         {
+            Logger.Info("Saving hashes...");
             // 1. Calculate the SHA-256 and make sure it's in the known good hashes list
             var sha256 = GetSha256(masterAudioFile);
             var knownGoodHashes = new List<Config.KnownGoodHash>(context.Config.KnownGoodHashes);
             var hash = new Config.KnownGoodHash
             {
-                Type = "sha256",
+                Type = Config.SHA_256_HASH,
                 Hash = sha256
             };
             if (!knownGoodHashes.Contains(hash))
             {
+                Logger.Info("Adding SHA256 hash to known good list");
                 knownGoodHashes.Add(hash);
                 context.Config.KnownGoodHashes = knownGoodHashes;
             }
 
             // 2. Fingerprint the audio
+            Logger.Info("Fingerprinting audio...");
             IAudioService audioService = new FFmpegAudioService();
             
             var hashedFingerprints = await FingerprintCommandBuilder.Instance
@@ -70,6 +75,7 @@ namespace SaberSongPatcher
 
             using (var file = File.Create(Context.FINGERPRINT_FILE))
             {
+                Logger.Info("Serializing fingerprints...");
                 Serializer.Serialize(file, hashedFingerprints);
             }
 
