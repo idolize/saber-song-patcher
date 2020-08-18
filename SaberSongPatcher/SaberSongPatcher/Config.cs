@@ -40,6 +40,7 @@ namespace SaberSongPatcher
             }
         }
 
+        [JsonIgnore]
         public bool IsChanged { get; set; } = false;
 
         [JsonProperty("schemaVersion")]

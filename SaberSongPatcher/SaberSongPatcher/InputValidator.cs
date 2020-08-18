@@ -8,6 +8,8 @@ using SoundFingerprinting.Data;
 using SoundFingerprinting.Emy;
 using System.IO;
 using ProtoBuf;
+using SoundFingerprinting.Configuration;
+using SoundFingerprinting.Query;
 
 namespace SaberSongPatcher
 {
@@ -51,12 +53,26 @@ namespace SaberSongPatcher
             modelService.Insert(track, fingerprints);
 
             double startAtSecond = context.Config.Fingerprint?.StartAtSecond ?? 0;
-            Logger.Debug($"Analyzing ${SECONDS_TO_ANALYZE} seconds of audio starting at {startAtSecond} seconds");
+            Logger.Debug("Analyzing ${secsToAnalyze} seconds of audio starting at {startAtSecond} seconds",
+                SECONDS_TO_ANALYZE, startAtSecond);
 
-            var queryResult = await QueryCommandBuilder.Instance.BuildQueryCommand()
-                                                 .From(queryAudioFile, SECONDS_TO_ANALYZE, startAtSecond)
-                                                 .UsingServices(modelService, audioService)
-                                                 .Query();
+            // HACK soundfingerprinting library assumes current directory is always exe directory
+            var queryAudioFullPath = Path.GetFullPath(queryAudioFile);
+            var prevCurrentDirectory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(context.ExeDirectory);
+            QueryResult queryResult;
+            try
+            {
+                queryResult = await QueryCommandBuilder.Instance.BuildQueryCommand()
+                                                     .From(queryAudioFullPath, SECONDS_TO_ANALYZE, startAtSecond)
+                                                     .WithQueryConfig(new LowLatencyQueryConfiguration())
+                                                     .UsingServices(modelService, audioService)
+                                                     .Query();
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory(prevCurrentDirectory);
+            }
 
             var match = queryResult.BestMatch;
             if (match == null)
@@ -65,6 +81,7 @@ namespace SaberSongPatcher
                 return false;
             }
 
+            // https://github.com/AddictedCS/soundfingerprinting/wiki/Different-Types-of-Coverage
             Logger.Debug("Match found!");
             Logger.Debug($"Confidence {match.Confidence} < {CONFIDENCE_THRESHOLD} = {match.Confidence < CONFIDENCE_THRESHOLD}");
             Logger.Debug("QueryRelativeCoverage=" + match.QueryRelativeCoverage);
@@ -79,6 +96,7 @@ namespace SaberSongPatcher
 
         public async Task<bool> ValidateInput(string queryAudioFile)
         {
+            Logger.Info("Validating audio...");
             // 1. Check against known good hashes (if any) first as a short circuit
             if (context.Config.KnownGoodHashes.Count > 0)
             {
@@ -93,7 +111,7 @@ namespace SaberSongPatcher
                             if (knownHash.Hash.Equals(sha256))
                             {
                                 // The file matches by hash so we know it is definitely valid
-                                Logger.Debug($"Match of SHA256 {sha256}");
+                                Logger.Debug("Match of SHA256 {sha256}", sha256);
                                 return true;
                             }
                         }

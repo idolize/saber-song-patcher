@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using CommandLine;
+using System.Collections.Generic;
+using System.IO;
 
 namespace SaberSongPatcher
 {
@@ -9,46 +10,94 @@ namespace SaberSongPatcher
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        static async Task<int> Main(string[] args)
+        class Options
         {
-            // TODO parse arguments better (e.g. allow for operation names or flags)
-            var expectedArgsNum = 3;
-            if (args.Length < expectedArgsNum)
+            [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
+            public bool Verbose { get; set; }
+
+            [Option('c', "config", Required = false, HelpText = "Folder where config.json file exists.")]
+            public string? ConfigDirectory { get; set; }
+        }
+
+        [Verb("patch", HelpText = "Verify, patch, and convert the input audio file for use.")]
+        class PatchOptions: Options
+        {
+            [Option('i', "input", Required = true, HelpText = "Input song file (supports most codecs).")]
+            public string InputFile { get; set; } = string.Empty;
+
+            [Option('o', "output", Required = false, HelpText = "Name of output file (defaults to {input}.ogg).")]
+            public string? OutputFile { get; set; }
+        }
+
+        [Verb("fingerprint", HelpText = "Store fingerprint and hash data for the master audio file.")]
+        class FingerprintOptions: Options
+        {
+            [Option('m', "master", Required = true, HelpText = "Master audio file for the song.")]
+            public string MasterFile { get; set; } = string.Empty;
+        }
+
+        static async Task<int> RunFingerprintAndReturnExitCode(FingerprintOptions opts)
+        {
+            var config = ConfigParser.ParseConfig(opts.ConfigDirectory, false);
+            var context = new Context(config);
+            var hashCalculator = new HashCalculator(context);
+
+            var success = await hashCalculator.SaveHashesFromMaster(opts.MasterFile);
+            if (!success)
             {
-                Logger.Error("Please enter " + expectedArgsNum + " arguments.");
                 return 1;
             }
-            // TODO store these on context?
-            var inputFilename = args[0];
-            var outputFilename = args[1];
-            var masterFilename = args[2];
 
+            ConfigParser.FlushConfigChanges(context.Config, opts.ConfigDirectory);
+
+            Logger.Info("Success!");
+            return 0;
+        }
+
+        static async Task<int> RunPatchAndReturnExitCode(PatchOptions opts)
+        {
+            var config = ConfigParser.ParseConfig(opts.ConfigDirectory, true);
+            var context = new Context(config);
+            var inputValidator = new InputValidator(context);
+            var inputTransformer = new InputTransformer(context);
+
+            var seemsCorrect = await inputValidator.ValidateInput(opts.InputFile);
+            if (!seemsCorrect)
+            {
+                Logger.Warn("Song does not match expectation for this map.");
+                return 1;
+            }
+
+            var success = await inputTransformer.TransformInput(opts.InputFile, opts.OutputFile);
+            if (!success)
+            {
+                return 1;
+            }
+
+            ConfigParser.FlushConfigChanges(context.Config, opts.ConfigDirectory);
+
+            Logger.Info("Success!");
+            return 0;
+        }
+
+        static Task<int> HandleArgParseError(IEnumerable<Error> errs)
+        {
+            // Error parsing command line args (information is already printed to the user)
+            return Task.FromResult(3);
+        }
+
+        static async Task<int> Main(string[] args)
+        {
             try
             {
-                var config = ConfigParser.ParseConfig();
-                var context = new Context(config);
-                var hashCalculator = new HashCalculator(context);
-                var inputValidator = new InputValidator(context);
-                var inputTransformer = new InputTransformer(context);
-
-                
-                hashCalculator.SaveHashesFromMaster(masterFilename);
-
-                Logger.Info("Validating audio...");
-                var seemsCorrect = await inputValidator.ValidateInput(inputFilename);
-                if (!seemsCorrect)
-                {
-                    Logger.Warn("Song does not match expectation for this map.");
-                    return 1;
-                }
-
-                Logger.Info("Transforming audio...");
-                await inputTransformer.TransformInput(inputFilename);
-
-                ConfigParser.FlushConfigChanges(context.Config);
-
-                Logger.Info("Done!");
-                return 0;
+                Logger.Debug("Starting...");
+                // Parse command line args and run the methods
+                // https://github.com/commandlineparser/commandline
+                return await Parser.Default.ParseArguments<FingerprintOptions, PatchOptions>(args)
+                    .MapResult(
+                      (FingerprintOptions opts) => RunFingerprintAndReturnExitCode(opts),
+                      (PatchOptions opts) => RunPatchAndReturnExitCode(opts),
+                      HandleArgParseError);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.IO;
 
 namespace SaberSongPatcher
@@ -7,38 +8,63 @@ namespace SaberSongPatcher
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public static Config ParseConfig()
+        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         {
-            try
+            ContractResolver = new DefaultContractResolver
             {
-                Logger.Debug("Parsing config file...");
-                // Deserialize JSON directly from a file
-                using (StreamReader file = File.OpenText(Context.CONFIG_FILE))
+                NamingStrategy = new CamelCaseNamingStrategy()
+            },
+            NullValueHandling = NullValueHandling.Ignore,
+            Formatting = Formatting.Indented
+        };
+
+    public static Config ParseConfig(string? configDirectory, bool strict)
+        {
+            Logger.Debug("Parsing config file...");
+
+            var filePath = Path.Join(configDirectory, Context.CONFIG_FILE);
+            if (!File.Exists(filePath))
+            {
+                if (strict)
                 {
-                    JsonSerializer serializer = new JsonSerializer();
-                    return (Config)serializer.Deserialize(file, typeof(Config))!;
+                    throw new FileNotFoundException("No config file found", filePath);
                 }
-            } catch (FileNotFoundException)
-            {
+
                 Logger.Debug("No config file found, using default config");
                 return new Config
                 {
                     IsChanged = true
                 };
             }
+
+            // Deserialize JSON directly from a file
+            using (StreamReader file = File.OpenText(filePath))
+            {
+                JsonSerializer serializer = JsonSerializer.Create(JsonSettings);
+                return (Config)serializer.Deserialize(file, typeof(Config))!;
+            }
         }
 
-        public static void FlushConfigChanges(Config config)
+        public static void FlushConfigChanges(Config config, string? configDirectory)
         {
             if (config.IsChanged)
             {
                 Logger.Info("Updating config...");
-                // Serialize JSON directly to a file
-                using (StreamWriter file = File.CreateText(Context.CONFIG_FILE))
+
+                var filePath = Path.Join(configDirectory, Context.CONFIG_FILE);
+                if (File.Exists(filePath))
                 {
-                    JsonSerializer serializer = new JsonSerializer();
+                    Logger.Debug("Deleting existing config at {filePath}", filePath);
+                    File.Delete(filePath);
+                }
+
+                // Serialize JSON directly to a file
+                using (StreamWriter file = File.CreateText(filePath))
+                {
+                    JsonSerializer serializer = JsonSerializer.Create(JsonSettings);
                     serializer.Serialize(file, config);
                 }
+                Logger.Info("{file} saved to {filePath}", Context.CONFIG_FILE, Path.GetFullPath(filePath));
             } else {
                 Logger.Debug("Config not changed");
             }

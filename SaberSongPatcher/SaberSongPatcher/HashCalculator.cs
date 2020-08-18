@@ -1,11 +1,13 @@
 ﻿using System.Security.Cryptography;
-using System.Text;
 using System.IO;
-using SoundFingerprinting.Audio;
 using SoundFingerprinting.Builder;
 using SoundFingerprinting.Emy;
 using System.Collections.Generic;
 using ProtoBuf;
+using System.Threading.Tasks;
+using SoundFingerprinting.Data;
+using SoundFingerprinting.Configuration;
+using System;
 
 namespace SaberSongPatcher
 {
@@ -22,27 +24,14 @@ namespace SaberSongPatcher
 
         public static string GetSha256(string inputFile)
         {
-            using (SHA256 mySHA256 = SHA256.Create())
+            using (SHA256 SHA256 = SHA256Managed.Create())
             {
-                FileStream fileStream = File.OpenRead(inputFile);
-                // Be sure it's positioned to the beginning of the stream.
-                fileStream.Position = 0;
-                // Compute the hash of the fileStream.
-                byte[] hashValue = mySHA256.ComputeHash(fileStream);
-                fileStream.Close();
-
-                StringBuilder sb = new StringBuilder();
-                // Display the byte array in a readable format.
-                for (int i = 0; i < hashValue.Length; i++)
-                {
-                    sb.Append($"{hashValue[i]:X2}");
-                    if ((i % 4) == 3) sb.Append(" ");
-                }
-                return sb.ToString();
+                using (FileStream fileStream = File.OpenRead(inputFile))
+                    return Convert.ToBase64String(SHA256.ComputeHash(fileStream));
             }
         }
 
-        public async void SaveHashesFromMaster(string masterAudioFile)
+        public async Task<bool> SaveHashesFromMaster(string masterAudioFile)
         {
             Logger.Info("Saving hashes...");
             // 1. Calculate the SHA-256 and make sure it's in the known good hashes list
@@ -58,17 +47,41 @@ namespace SaberSongPatcher
                 Logger.Info("Adding SHA256 hash to known good list");
                 knownGoodHashes.Add(hash);
                 context.Config.KnownGoodHashes = knownGoodHashes;
+                context.Config.IsChanged = true;
             }
 
             // 2. Fingerprint the audio
             Logger.Info("Fingerprinting audio...");
-            IAudioService audioService = new FFmpegAudioService();
-            
-            var hashedFingerprints = await FingerprintCommandBuilder.Instance
-                                        .BuildFingerprintCommand()
-                                        .From(masterAudioFile)
-                                        .UsingServices(audioService)
-                                        .Hash();
+            var audioService = new FFmpegAudioService();
+
+            // HACK soundfingerprinting library assumes current directory is always exe directory
+            var masterAudioFullPath = Path.GetFullPath(masterAudioFile);
+            var prevCurrentDirectory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(context.ExeDirectory);
+            Hashes hashedFingerprints;
+            try
+            {
+                hashedFingerprints = await FingerprintCommandBuilder.Instance
+                                            .BuildFingerprintCommand()
+                                            .From(masterAudioFullPath)
+                                            .WithFingerprintConfig(new LowLatencyFingerprintConfiguration())
+                                            .UsingServices(audioService)
+                                            .Hash();
+            }
+            catch (DllNotFoundException ex)
+            {
+                if (ex.Message.Contains(".dll"))
+                {
+                    Logger.Error(ex, "Unable to find ffmpeg DLLs - make sure ffmpeg files are in \\FFmpeg\\bin\\x64");
+                } else
+                {
+                    Logger.Error(ex);
+                }
+                return false;
+            } finally
+            {
+                Directory.SetCurrentDirectory(prevCurrentDirectory);
+            }
 
             // 3. Save the fingerprint proto
             // https://github.com/protobuf-net/protobuf-net#2-serialize-your-data
@@ -77,9 +90,12 @@ namespace SaberSongPatcher
             {
                 Logger.Info("Serializing fingerprints...");
                 Serializer.Serialize(file, hashedFingerprints);
+                Logger.Info("{file} created in directory {directory}",
+                    Context.FINGERPRINT_FILE, Path.GetDirectoryName(Path.GetFullPath(Context.FINGERPRINT_FILE)));
             }
 
             // TODO 4. Save the duration of the song to the config
+            return true;
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Linq;
 using System.IO;
-using System.Reflection;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Exceptions;
 
@@ -25,14 +24,13 @@ namespace SaberSongPatcher
             if (File.Exists(output))
             {
                 // Overwrite the file
-                Logger.Debug($"Deleting existing output file '{output}'");
+                Logger.Debug("Deleting existing output file {output}", output);
                 File.Delete(output);
             }
 
             // Set directory where the app should look for FFmpeg executables
             // based on https://github.com/AddictedCS/soundfingerprinting/wiki/Supported-Audio-Formats
-            string ffmpegPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "FFmpeg\\bin\\x64");
-            FFmpegApi.SetExecutablesPath(ffmpegPath);
+            FFmpegApi.SetExecutablesPath(context.FFmpegRootPath);
 
             IMediaInfo info = await FFmpegApi.GetMediaInfo(input);
             IStream? audioStream = info.AudioStreams.FirstOrDefault()
@@ -55,11 +53,15 @@ namespace SaberSongPatcher
                 Logger.Error(ex, "Failed to convert to OGG");
                 return false;
             }
+            Logger.Info("{file} created in directory {directory}",
+                    output, Path.GetDirectoryName(Path.GetFullPath(output)));
             return true;
         }
 
-        public async Task<bool> TransformInput(string input)
+        public async Task<bool> TransformInput(string input, string? output)
         {
+            Logger.Info("Transforming audio...");
+
             // TODO 1. Apply patches from config
 
             // 2. Convert to OGG
@@ -73,7 +75,7 @@ namespace SaberSongPatcher
                 return true;
             }
 
-            return await ConvertToOgg(input, $"{fileName}.ogg");
+            return await ConvertToOgg(input, output ?? $"{fileName}.ogg");
         }
     }
 }
