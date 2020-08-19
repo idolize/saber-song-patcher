@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using CommandLine;
 using System.Collections.Generic;
-using System.IO;
+using NLog;
 
 namespace SaberSongPatcher
 {
@@ -12,8 +12,11 @@ namespace SaberSongPatcher
 
         class Options
         {
+            [Option('s', "silent", Required = false, HelpText = "Disable all console output.")]
+            public bool Silent { get; set; } = false;
+
             [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
-            public bool Verbose { get; set; }
+            public bool Verbose { get; set; } = false;
 
             [Option('c', "config", Required = false, HelpText = "Folder where config.json file exists.")]
             public string? ConfigDirectory { get; set; }
@@ -36,8 +39,24 @@ namespace SaberSongPatcher
             public string MasterFile { get; set; } = string.Empty;
         }
 
+        static private void ConfigureLoggers(Options opts)
+        {
+            if (opts.Verbose)
+            {
+                // Enable Debug output on console
+                LogManager.Configuration.Variables["customLevel"] = "Debug";
+                LogManager.ReconfigExistingLoggers();
+            } else if (opts.Silent)
+            {
+                // Disable all output on console
+                LogManager.Configuration.Variables["customLevel"] = "Off";
+                LogManager.ReconfigExistingLoggers();
+            }
+        }
+
         static async Task<int> RunFingerprintAndReturnExitCode(FingerprintOptions opts)
         {
+            ConfigureLoggers(opts);
             var config = ConfigParser.ParseConfig(opts.ConfigDirectory, false);
             var context = new Context(config);
             var hashCalculator = new HashCalculator(context);
@@ -50,12 +69,14 @@ namespace SaberSongPatcher
 
             ConfigParser.FlushConfigChanges(context.Config, opts.ConfigDirectory);
 
-            Logger.Info("Success!");
+            Logger.Info("Success! Distribute your {0} and {1} files along with your map.",
+                Context.FINGERPRINT_FILE, Context.CONFIG_FILE);
             return 0;
         }
 
         static async Task<int> RunPatchAndReturnExitCode(PatchOptions opts)
         {
+            ConfigureLoggers(opts);
             var config = ConfigParser.ParseConfig(opts.ConfigDirectory, true);
             var context = new Context(config);
             var inputValidator = new InputValidator(context);
@@ -64,7 +85,7 @@ namespace SaberSongPatcher
             var seemsCorrect = await inputValidator.ValidateInput(opts.InputFile);
             if (!seemsCorrect)
             {
-                Logger.Warn("Song does not match expectation for this map.");
+                Logger.Error("Input audio file does not match master audio file for this map.");
                 return 1;
             }
 
@@ -76,7 +97,7 @@ namespace SaberSongPatcher
 
             ConfigParser.FlushConfigChanges(context.Config, opts.ConfigDirectory);
 
-            Logger.Info("Success!");
+            Logger.Info("Success! Audio file now ready to use in Beat Saber.");
             return 0;
         }
 
@@ -106,7 +127,7 @@ namespace SaberSongPatcher
             }
             finally
             {
-                NLog.LogManager.Shutdown();
+                LogManager.Shutdown();
             }
         }
     }

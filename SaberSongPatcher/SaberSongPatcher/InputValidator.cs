@@ -10,6 +10,9 @@ using System.IO;
 using ProtoBuf;
 using SoundFingerprinting.Configuration;
 using SoundFingerprinting.Query;
+using Xabe.FFmpeg;
+
+using FFmpegApi = Xabe.FFmpeg.FFmpeg;
 
 namespace SaberSongPatcher
 {
@@ -17,8 +20,12 @@ namespace SaberSongPatcher
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static readonly int SECONDS_TO_ANALYZE = 10; // number of seconds to analyze from query file
-        private static readonly double CONFIDENCE_THRESHOLD = 0.9; // how confident we need to be to consider it a match
+        // Number of seconds to analyze from query file
+        private static readonly int SECONDS_TO_ANALYZE = 10;
+        // How confident we need to be to consider it a match
+        private static readonly double CONFIDENCE_THRESHOLD = 0.89; 
+        private static readonly double FUZZ_FACTOR_SEC = 0.15;
+        private static readonly int ALLOWED_SONG_LENGTH_DIFFERENCE_MS = 900000; // 3500;
 
         private readonly Context context;
 
@@ -45,15 +52,17 @@ namespace SaberSongPatcher
             } catch (SystemException ex)
             {
                 Logger.Error(ex, "Failed to access fingerprint file");
+                Logger.Error("Make sure {file} exists in the working directory {dir}",
+                    Context.FINGERPRINT_FILE, Directory.GetCurrentDirectory());
                 return false;
             }
 
-            // Since we only have one song this part doesn't matter
+            // Since we only have one song we are querying this info doesn't matter
             var track = new TrackInfo("123", "Test Song", "Test Artist");
             modelService.Insert(track, fingerprints);
 
             double startAtSecond = context.Config.Fingerprint?.StartAtSecond ?? 0;
-            Logger.Debug("Analyzing ${secsToAnalyze} seconds of audio starting at {startAtSecond} seconds",
+            Logger.Debug("Analyzing {secsToAnalyze} seconds of audio starting at {startAtSecond} seconds",
                 SECONDS_TO_ANALYZE, startAtSecond);
 
             // HACK soundfingerprinting library assumes current directory is always exe directory
@@ -77,26 +86,35 @@ namespace SaberSongPatcher
             var match = queryResult.BestMatch;
             if (match == null)
             {
-                Logger.Debug("No fingerprint match found");
+                Logger.Debug("No fingerprint match found for this audio file");
                 return false;
             }
 
             // https://github.com/AddictedCS/soundfingerprinting/wiki/Different-Types-of-Coverage
-            Logger.Debug("Match found!");
-            Logger.Debug($"Confidence {match.Confidence} < {CONFIDENCE_THRESHOLD} = {match.Confidence < CONFIDENCE_THRESHOLD}");
-            Logger.Debug("QueryRelativeCoverage=" + match.QueryRelativeCoverage);
-            Logger.Debug("DiscreteCoverageLength=" + match.DiscreteCoverageLength);
-            Logger.Debug("CoverageWithPermittedGapsLength=" + match.CoverageWithPermittedGapsLength);
-            Logger.Debug("CoverageLength=" + match.CoverageLength);
-            Logger.Debug("TrackStartsAt=" + match.TrackStartsAt);
-            Logger.Debug("TrackMatchStartsAt=" + match.TrackMatchStartsAt);
+            var meetsConfidenceThreshold = match.Confidence >= CONFIDENCE_THRESHOLD;
+            var meetsCoverageThreshold = match.CoverageLength >= match.QueryLength - 1;
+            var meetsTrackStartOffsetThreshold = Math.Abs(match.TrackStartsAt) - startAtSecond <= FUZZ_FACTOR_SEC;
 
-            return match.Confidence > CONFIDENCE_THRESHOLD;
+            Logger.Debug("Match found!");
+            Logger.Debug("Confidence {val} >= {threshold} = {res}",
+                match.Confidence, CONFIDENCE_THRESHOLD, meetsConfidenceThreshold);
+            Logger.Debug("CoverageLength {val} >= {threshold} = {res}",
+                match.CoverageLength, match.QueryLength - 1, meetsCoverageThreshold);
+            Logger.Debug("TrackStartsAt abs({val}) - {start} <= {threshold} = {res}",
+                match.TrackStartsAt, startAtSecond, FUZZ_FACTOR_SEC, meetsTrackStartOffsetThreshold);
+            Logger.Debug("QueryMatchStartsAt={0}", match.QueryMatchStartsAt);
+            Logger.Debug("TrackMatchStartsAt={0}", match.TrackMatchStartsAt);
+            Logger.Debug("QueryLength={0}", match.QueryLength);
+            Logger.Debug("QueryRelativeCoverage={0}", match.QueryRelativeCoverage);
+            Logger.Debug("DiscreteCoverageLength={0}", match.DiscreteCoverageLength);
+            Logger.Debug("CoverageWithPermittedGapsLength={0}", match.CoverageWithPermittedGapsLength);
+
+            return meetsConfidenceThreshold && meetsCoverageThreshold && meetsTrackStartOffsetThreshold;
         }
 
         public async Task<bool> ValidateInput(string queryAudioFile)
         {
-            Logger.Info("Validating audio...");
+            Logger.Info("Validating audio file is correct master track...");
             // 1. Check against known good hashes (if any) first as a short circuit
             if (context.Config.KnownGoodHashes.Count > 0)
             {
@@ -124,7 +142,22 @@ namespace SaberSongPatcher
                 }
             }
 
-            // 2. Read fingerprint hashes from file and check those using more advanced technique
+            // 2. Verify the length of the audio is not wildly different from the master
+            if (context.Config.LengthMs > 0)
+            {
+                IMediaInfo info = await FFmpegApi.GetMediaInfo(queryAudioFile);
+                var queryLengthMs = info.Duration.TotalMilliseconds;
+                var lengthDifferenceMs = Math.Abs(queryLengthMs - context.Config.LengthMs);
+                if (lengthDifferenceMs > ALLOWED_SONG_LENGTH_DIFFERENCE_MS)
+                {
+                    Logger.Debug("Song length {queryLength}ms is too different from expected length {masterLength}ms",
+                        queryLengthMs,
+                        context.Config.LengthMs);
+                    return false;
+                }
+            }
+
+            // 3. Read fingerprint hashes from file and check those using more advanced technique
             return await CheckFingerprint(queryAudioFile);
         }
     }

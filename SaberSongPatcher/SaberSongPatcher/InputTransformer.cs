@@ -28,10 +28,6 @@ namespace SaberSongPatcher
                 File.Delete(output);
             }
 
-            // Set directory where the app should look for FFmpeg executables
-            // based on https://github.com/AddictedCS/soundfingerprinting/wiki/Supported-Audio-Formats
-            FFmpegApi.SetExecutablesPath(context.FFmpegRootPath);
-
             IMediaInfo info = await FFmpegApi.GetMediaInfo(input);
             IStream? audioStream = info.AudioStreams.FirstOrDefault()
                 ?.SetCodec(AudioCodec.libvorbis);
@@ -60,7 +56,7 @@ namespace SaberSongPatcher
 
         public async Task<bool> TransformInput(string input, string? output)
         {
-            Logger.Info("Transforming audio...");
+            Logger.Info("Transforming master audio file to match output...");
 
             // TODO 1. Apply patches from config
 

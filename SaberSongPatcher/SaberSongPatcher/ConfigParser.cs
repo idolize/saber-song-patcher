@@ -27,7 +27,7 @@ namespace SaberSongPatcher
             {
                 if (strict)
                 {
-                    throw new FileNotFoundException("No config file found", filePath);
+                    throw new FileNotFoundException($"No '{Context.CONFIG_FILE}' config file found", filePath);
                 }
 
                 Logger.Debug("No config file found, using default config");
@@ -41,7 +41,16 @@ namespace SaberSongPatcher
             using (StreamReader file = File.OpenText(filePath))
             {
                 JsonSerializer serializer = JsonSerializer.Create(JsonSettings);
-                return (Config)serializer.Deserialize(file, typeof(Config))!;
+                try
+                {
+                    var config = (Config)serializer.Deserialize(file, typeof(Config))!;
+                    Logger.Debug("Config file parsed");
+                    return config;
+                } catch (JsonReaderException ex)
+                {
+                    Logger.Error("Invalid {filename} config file format", Context.CONFIG_FILE);
+                    throw ex;
+                }
             }
         }
 

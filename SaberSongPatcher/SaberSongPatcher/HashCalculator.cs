@@ -51,7 +51,7 @@ namespace SaberSongPatcher
             }
 
             // 2. Fingerprint the audio
-            Logger.Info("Fingerprinting audio...");
+            Logger.Info("Fingerprinting master audio file...");
             var audioService = new FFmpegAudioService();
 
             // HACK soundfingerprinting library assumes current directory is always exe directory
@@ -70,13 +70,7 @@ namespace SaberSongPatcher
             }
             catch (DllNotFoundException ex)
             {
-                if (ex.Message.Contains(".dll"))
-                {
-                    Logger.Error(ex, "Unable to find ffmpeg DLLs - make sure ffmpeg files are in \\FFmpeg\\bin\\x64");
-                } else
-                {
-                    Logger.Error(ex);
-                }
+                Logger.Error(ex, "Unable to find ffmpeg DLLs: {message}", ex.Message);
                 return false;
             } finally
             {
@@ -94,7 +88,14 @@ namespace SaberSongPatcher
                     Context.FINGERPRINT_FILE, Path.GetDirectoryName(Path.GetFullPath(Context.FINGERPRINT_FILE)));
             }
 
-            // TODO 4. Save the duration of the song to the config
+            // 4. Save the duration of the song to the config
+            Logger.Debug("Duration {duration}s", hashedFingerprints.DurationInSeconds);
+            int durationMs = Convert.ToInt32(hashedFingerprints.DurationInSeconds * 1000);
+            if (context.Config.LengthMs != durationMs)
+            {
+                context.Config.LengthMs = durationMs;
+                context.Config.IsChanged = true;
+            }
             return true;
         }
     }
