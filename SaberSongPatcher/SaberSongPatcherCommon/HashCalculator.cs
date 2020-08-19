@@ -11,9 +11,11 @@ using System;
 
 namespace SaberSongPatcher
 {
-    class HashCalculator
+    public class HashCalculator
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+        public static readonly string FINGERPRINT_FILE = "fingerprint.bin";
 
         private readonly Context context;
 
@@ -80,12 +82,12 @@ namespace SaberSongPatcher
             // 3. Save the fingerprint proto
             // https://github.com/protobuf-net/protobuf-net#2-serialize-your-data
 
-            using (var file = File.Create(Context.FINGERPRINT_FILE))
+            using (var file = File.Create(FINGERPRINT_FILE))
             {
                 Logger.Info("Serializing fingerprints...");
                 Serializer.Serialize(file, hashedFingerprints);
                 Logger.Info("{file} created in directory {directory}",
-                    Context.FINGERPRINT_FILE, Path.GetDirectoryName(Path.GetFullPath(Context.FINGERPRINT_FILE)));
+                    FINGERPRINT_FILE, Path.GetDirectoryName(Path.GetFullPath(FINGERPRINT_FILE)));
             }
 
             // 4. Save the duration of the song to the config

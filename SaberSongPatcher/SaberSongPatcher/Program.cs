@@ -3,8 +3,9 @@ using System.Threading.Tasks;
 using CommandLine;
 using System.Collections.Generic;
 using NLog;
+using SaberSongPatcher;
 
-namespace SaberSongPatcher
+namespace SaberSongPatcher.CLI
 {
     class Program
     {
@@ -18,12 +19,12 @@ namespace SaberSongPatcher
             [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
             public bool Verbose { get; set; } = false;
 
-            [Option('c', "config", Required = false, HelpText = "Folder where config.json file exists.")]
+            [Option('c', "config", Required = false, HelpText = "Folder where audio.json config file exists.")]
             public string? ConfigDirectory { get; set; }
         }
 
         [Verb("patch", HelpText = "Verify, patch, and convert the input audio file for use.")]
-        class PatchOptions: Options
+        class PatchOptions : Options
         {
             [Option('i', "input", Required = true, HelpText = "Input song file (supports most codecs).")]
             public string InputFile { get; set; } = string.Empty;
@@ -33,7 +34,7 @@ namespace SaberSongPatcher
         }
 
         [Verb("fingerprint", HelpText = "Store fingerprint and hash data for the master audio file.")]
-        class FingerprintOptions: Options
+        class FingerprintOptions : Options
         {
             [Option('m', "master", Required = true, HelpText = "Master audio file for the song.")]
             public string MasterFile { get; set; } = string.Empty;
@@ -70,7 +71,7 @@ namespace SaberSongPatcher
             ConfigParser.FlushConfigChanges(context.Config, opts.ConfigDirectory);
 
             Logger.Info("Success! Distribute your {0} and {1} files along with your map.",
-                Context.FINGERPRINT_FILE, Context.CONFIG_FILE);
+                HashCalculator.FINGERPRINT_FILE, Config.CONFIG_FILE);
             return 0;
         }
 

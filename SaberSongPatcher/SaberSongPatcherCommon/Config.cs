@@ -5,8 +5,11 @@ using Newtonsoft.Json;
 
 namespace SaberSongPatcher
 {
-    class Config
+    public class Config
     {
+        public static readonly string CONFIG_FILE = "audio.json";
+        public static readonly string CONFIG_SCHEMA_FILE = "audio.schema.json";
+
         public static readonly string SHA_256_HASH = "sha256";
 
         public class FingerprintConfig

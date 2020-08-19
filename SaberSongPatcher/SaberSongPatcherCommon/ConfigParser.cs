@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace SaberSongPatcher
 {
-    class ConfigParser
+    public class ConfigParser
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -23,16 +23,17 @@ namespace SaberSongPatcher
             Formatting = Formatting.Indented
         };
 
-    public static Config ParseConfig(string? configDirectory, bool strict)
+        public static Config ParseConfig(string? configDirectory, bool strict)
         {
             Logger.Debug("Parsing config file...");
 
-            var filePath = Path.Join(configDirectory, Context.CONFIG_FILE);
+            var filePath = Path.HasExtension(configDirectory) ?
+                configDirectory : Path.Join(configDirectory, Config.CONFIG_FILE);
             if (!File.Exists(filePath))
             {
                 if (strict)
                 {
-                    throw new FileNotFoundException($"No '{Context.CONFIG_FILE}' config file found", filePath);
+                    throw new FileNotFoundException($"No '{Config.CONFIG_FILE}' config file found", filePath);
                 }
 
                 Logger.Debug("No config file found, using default config");
@@ -44,7 +45,7 @@ namespace SaberSongPatcher
 
             JSchema schema;
             var schemaFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
-                Context.CONFIG_SCHEMA_FILE);
+                Config.CONFIG_SCHEMA_FILE);
             using (StreamReader file = File.OpenText(schemaFile))
             using (JsonTextReader reader = new JsonTextReader(file))
             {
@@ -76,7 +77,7 @@ namespace SaberSongPatcher
                     return config;
                 } catch (JsonReaderException ex)
                 {
-                    Logger.Error("Invalid {filename} config file format", Context.CONFIG_FILE);
+                    Logger.Error("Invalid {filename} config file format", Config.CONFIG_FILE);
                     foreach (var message in validationMessages)
                     {
                         Logger.Error(message);
@@ -86,13 +87,18 @@ namespace SaberSongPatcher
             }
         }
 
+        public static Config ParseConfig(bool strict)
+        {
+            return ParseConfig(null, strict);
+        }
+
         public static void FlushConfigChanges(Config config, string? configDirectory)
         {
             if (config.IsChanged)
             {
                 Logger.Info("Updating config...");
 
-                var filePath = Path.Join(configDirectory, Context.CONFIG_FILE);
+                var filePath = Path.Join(configDirectory, Config.CONFIG_FILE);
                 if (File.Exists(filePath))
                 {
                     Logger.Debug("Deleting existing config at {filePath}", filePath);
@@ -105,10 +111,15 @@ namespace SaberSongPatcher
                     JsonSerializer serializer = JsonSerializer.Create(JsonSettings);
                     serializer.Serialize(file, config);
                 }
-                Logger.Info("{file} saved to {filePath}", Context.CONFIG_FILE, Path.GetFullPath(filePath));
+                Logger.Info("{file} saved to {filePath}", Config.CONFIG_FILE, Path.GetFullPath(filePath));
             } else {
                 Logger.Debug("Config not changed");
             }
+        }
+
+        public static void FlushConfigChanges(Config config)
+        {
+            FlushConfigChanges(config, null);
         }
     }
 }

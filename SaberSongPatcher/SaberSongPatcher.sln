@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaberSongPatcher", "SaberSongPatcher\SaberSongPatcher.csproj", "{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SaberSongPatcherCLI", "SaberSongPatcher\SaberSongPatcherCLI.csproj", "{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaberSongPatcherUI", "SaberSongPatcherUI\SaberSongPatcherUI.csproj", "{79A78D15-8F07-4023-A01E-308119AB95A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaberSongPatcherCommon", "SaberSongPatcherCommon\SaberSongPatcherCommon.csproj", "{6B41B4E7-D19E-462E-AA19-0BA752C409E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87AFAF96-4DB1-4CE1-9CD4-4514D3DC3D5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79A78D15-8F07-4023-A01E-308119AB95A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79A78D15-8F07-4023-A01E-308119AB95A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79A78D15-8F07-4023-A01E-308119AB95A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79A78D15-8F07-4023-A01E-308119AB95A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B41B4E7-D19E-462E-AA19-0BA752C409E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B41B4E7-D19E-462E-AA19-0BA752C409E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B41B4E7-D19E-462E-AA19-0BA752C409E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B41B4E7-D19E-462E-AA19-0BA752C409E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

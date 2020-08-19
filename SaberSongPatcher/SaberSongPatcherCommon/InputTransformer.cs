@@ -10,7 +10,7 @@ using FFmpegApi = Xabe.FFmpeg.FFmpeg;
 
 namespace SaberSongPatcher
 {
-    class InputTransformer
+    public class InputTransformer
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -153,6 +153,11 @@ namespace SaberSongPatcher
             }
 
             return await TransformAudio(input, output ?? $"{fileName}{OUTPUT_EXTENSION}", parameters);
+        }
+
+        public Task<bool> TransformInput(string input)
+        {
+            return TransformInput(input, null);
         }
     }
 }

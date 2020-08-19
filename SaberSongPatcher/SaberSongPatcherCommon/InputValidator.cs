@@ -16,7 +16,7 @@ using FFmpegApi = Xabe.FFmpeg.FFmpeg;
 
 namespace SaberSongPatcher
 {
-    class InputValidator
+    public class InputValidator
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -34,7 +34,7 @@ namespace SaberSongPatcher
             this.context = context;
         }
 
-        private async Task<bool> CheckFingerprint(string queryAudioFile)
+        private async Task<bool> CheckFingerprint(string queryAudioFile, string? configDirectory)
         {
             IModelService modelService = new InMemoryModelService(); // store fingerprints in RAM
             IAudioService audioService = new FFmpegAudioService();
@@ -43,18 +43,18 @@ namespace SaberSongPatcher
             // https://github.com/protobuf-net/protobuf-net#3-deserialize-your-data
 
             Hashes fingerprints;
+            var filePath = Path.HasExtension(configDirectory) ?
+                configDirectory : Path.Join(configDirectory, HashCalculator.FINGERPRINT_FILE);
             try
             {
-                using (var file = File.OpenRead(Context.FINGERPRINT_FILE))
+                using (var file = File.OpenRead(filePath))
                 {
                     fingerprints = Serializer.Deserialize<Hashes>(file);
                 }
-            } catch (SystemException ex)
+            } catch (SystemException)
             {
-                Logger.Error(ex, "Failed to access fingerprint file");
-                Logger.Error("Make sure {file} exists in the working directory {dir}",
-                    Context.FINGERPRINT_FILE, Directory.GetCurrentDirectory());
-                return false;
+                throw new FileNotFoundException($"No valid '{HashCalculator.FINGERPRINT_FILE}' fingerprint file found",
+                    filePath);
             }
 
             // Since we only have one song we are querying this info doesn't matter
@@ -112,7 +112,7 @@ namespace SaberSongPatcher
             return meetsConfidenceThreshold && meetsCoverageThreshold && meetsTrackStartOffsetThreshold;
         }
 
-        public async Task<bool> ValidateInput(string queryAudioFile)
+        public async Task<bool> ValidateInput(string queryAudioFile, string? configDirectory)
         {
             Logger.Info("Validating audio file is correct master track...");
             // 1. Check against known good hashes (if any) first as a short circuit
@@ -158,7 +158,12 @@ namespace SaberSongPatcher
             }
 
             // 3. Read fingerprint hashes from file and check those using more advanced technique
-            return await CheckFingerprint(queryAudioFile);
+            return await CheckFingerprint(queryAudioFile, configDirectory);
+        }
+
+        public Task<bool> ValidateInput(string queryAudioFile)
+        {
+            return ValidateInput(queryAudioFile, null);
         }
     }
 }
