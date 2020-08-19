@@ -40,6 +40,51 @@ namespace SaberSongPatcher
             }
         }
 
+        public class PatchFadeDuration
+        {
+            [JsonProperty("startMs")]
+            public int StartMs { get; set; } = 0;
+
+            [JsonProperty("durationMs")]
+            public int DurationMs { get; set; } = 0;
+        }
+
+        public class PatchTrimDuration
+        {
+            [JsonProperty("startMs")]
+            public int? StartMs { get; set; }
+
+            [JsonProperty("endMs")]
+            public int? EndMs { get; set; }
+        }
+
+        public class PatchesConfig
+        {
+            [JsonProperty("delayStartMs")]
+            public int? DelayStartMs { get; set; }
+
+            [JsonProperty("padEndMs")]
+            public int? PadEndMs { get; set; }
+
+            [JsonProperty("trim")]
+            public PatchTrimDuration? Trim { get; set; }
+
+            [JsonProperty("fadeIn")]
+            public PatchFadeDuration? FadeIn { get; set; }
+
+            [JsonProperty("fadeOut")]
+            public PatchFadeDuration? FadeOut { get; set; }
+
+            public bool HasPatches()
+            {
+                return DelayStartMs != null ||
+                    PadEndMs != null ||
+                    Trim != null ||
+                    FadeIn != null ||
+                    FadeOut != null;
+            }
+        }
+
         [JsonIgnore]
         public bool IsChanged { get; set; } = false;
 
@@ -61,7 +106,7 @@ namespace SaberSongPatcher
         [JsonProperty("knownGoodHashes")]
         public IList<KnownGoodHash> KnownGoodHashes { get; set; } = new List<KnownGoodHash>();
 
-        //[JsonProperty("patches")]
-        //public IList<string> Patches { get; set; }
+        [JsonProperty("patches")]
+        public PatchesConfig Patches { get; set; } = new PatchesConfig();
     }
 }

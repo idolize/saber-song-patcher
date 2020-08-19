@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.IO;
 
@@ -14,6 +15,7 @@ namespace SaberSongPatcher
             {
                 NamingStrategy = new CamelCaseNamingStrategy()
             },
+            Converters = new[] { new StringEnumConverter(new CamelCaseNamingStrategy(), false) },
             NullValueHandling = NullValueHandling.Ignore,
             Formatting = Formatting.Indented
         };

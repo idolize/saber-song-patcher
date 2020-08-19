@@ -11,8 +11,14 @@
   "fingerprint": {
     "startAtSecond": 3
   },
-  "patches": [
-    { "type": "insertSilence", "startMs": 12345, "durationMs": 20 },
-    { "type": "fadeIn", "startMs": 12345, "endMs": 67890 }
-  ]
+  "patches": {
+    "delayStartMs": 5000,
+    "padEndMs": 5000,
+    "trim": {
+      "startMs": 0,
+      "endMs": 30000
+    },
+    "fadeIn": { "startMs": 0, "durationMs": 10000 },
+    "fadeOut": { "startMs": 20000, "durationMs": 10000 }
+  }
 }

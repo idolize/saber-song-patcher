@@ -23,9 +23,9 @@ namespace SaberSongPatcher
         // Number of seconds to analyze from query file
         private static readonly int SECONDS_TO_ANALYZE = 10;
         // How confident we need to be to consider it a match
-        private static readonly double CONFIDENCE_THRESHOLD = 0.89; 
-        private static readonly double FUZZ_FACTOR_SEC = 0.15;
-        private static readonly int ALLOWED_SONG_LENGTH_DIFFERENCE_MS = 900000; // 3500;
+        private static readonly double CONFIDENCE_THRESHOLD = 0.75; 
+        private static readonly double FUZZ_FACTOR_SEC = 0.1;
+        private static readonly int ALLOWED_SONG_LENGTH_DIFFERENCE_MS = 3500;
 
         private readonly Context context;
 
@@ -92,14 +92,14 @@ namespace SaberSongPatcher
 
             // https://github.com/AddictedCS/soundfingerprinting/wiki/Different-Types-of-Coverage
             var meetsConfidenceThreshold = match.Confidence >= CONFIDENCE_THRESHOLD;
-            var meetsCoverageThreshold = match.CoverageLength >= match.QueryLength - 1;
+            var meetsCoverageThreshold = match.CoverageLength >= match.QueryLength - 2;
             var meetsTrackStartOffsetThreshold = Math.Abs(match.TrackStartsAt) - startAtSecond <= FUZZ_FACTOR_SEC;
 
             Logger.Debug("Match found!");
             Logger.Debug("Confidence {val} >= {threshold} = {res}",
                 match.Confidence, CONFIDENCE_THRESHOLD, meetsConfidenceThreshold);
             Logger.Debug("CoverageLength {val} >= {threshold} = {res}",
-                match.CoverageLength, match.QueryLength - 1, meetsCoverageThreshold);
+                match.CoverageLength, match.QueryLength - 2, meetsCoverageThreshold);
             Logger.Debug("TrackStartsAt abs({val}) - {start} <= {threshold} = {res}",
                 match.TrackStartsAt, startAtSecond, FUZZ_FACTOR_SEC, meetsTrackStartOffsetThreshold);
             Logger.Debug("QueryMatchStartsAt={0}", match.QueryMatchStartsAt);
