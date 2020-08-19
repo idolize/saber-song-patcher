@@ -152,8 +152,7 @@ namespace SaberSongPatcher
                 return true;
             }
 
-            //return true;
-            return await TransformAudio(input, output ?? $"{fileName}.{OUTPUT_EXTENSION}", parameters);
+            return await TransformAudio(input, output ?? $"{fileName}{OUTPUT_EXTENSION}", parameters);
         }
     }
 }

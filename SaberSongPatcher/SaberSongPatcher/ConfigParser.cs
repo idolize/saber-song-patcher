@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Schema;
 using Newtonsoft.Json.Serialization;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 
 namespace SaberSongPatcher
 {
@@ -39,18 +42,45 @@ namespace SaberSongPatcher
                 };
             }
 
-            // Deserialize JSON directly from a file
-            using (StreamReader file = File.OpenText(filePath))
+            JSchema schema;
+            var schemaFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
+                Context.CONFIG_SCHEMA_FILE);
+            using (StreamReader file = File.OpenText(schemaFile))
+            using (JsonTextReader reader = new JsonTextReader(file))
             {
-                JsonSerializer serializer = JsonSerializer.Create(JsonSettings);
+                schema = JSchema.Load(reader);
+            }
+
+            // Deserialize JSON directly from a file
+            var validationMessages = new List<string>();
+            using (StreamReader file = File.OpenText(filePath))
+            using (JsonTextReader reader = new JsonTextReader(file))
+            {
+                JSchemaValidatingReader validatingReader = new JSchemaValidatingReader(reader)
+                {
+                    Schema = schema
+                };
+                JsonSerializer serializer = new JsonSerializer();
+                
+                validatingReader.ValidationEventHandler += (o, a) => validationMessages.Add(a.Message);
                 try
                 {
-                    var config = (Config)serializer.Deserialize(file, typeof(Config))!;
-                    Logger.Debug("Config file parsed");
+                    var config = serializer.Deserialize<Config>(validatingReader)!;
+                    if (validationMessages.Count > 0)
+                    {
+                        throw new JsonReaderException();
+                    } else
+                    {
+                        Logger.Debug("Config file parsed");
+                    }
                     return config;
                 } catch (JsonReaderException ex)
                 {
                     Logger.Error("Invalid {filename} config file format", Context.CONFIG_FILE);
+                    foreach (var message in validationMessages)
+                    {
+                        Logger.Error(message);
+                    }
                     throw ex;
                 }
             }
