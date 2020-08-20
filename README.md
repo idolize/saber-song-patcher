@@ -37,9 +37,9 @@ Here's the process:
 
 ![Screenshot](Images/gui-screenshot.png?raw=true "GUI Patcher")
 
-![Screenshot](Images/cli-screenshot.png?raw=true "CLI Example")
-
 ![Screenshot](Images/cli-help.png?raw=true "CLI Help")
+
+![Screenshot](Images/cli-screenshot.png?raw=true "CLI Example")
 
 ## Config format
 
