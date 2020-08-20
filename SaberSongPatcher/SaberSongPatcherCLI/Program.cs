@@ -129,6 +129,11 @@ namespace SaberSongPatcher.CLI
             finally
             {
                 LogManager.Shutdown();
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PROMPT")))
+                {
+                    Console.WriteLine("Press any key to exit");
+                    Console.ReadKey();
+                }
             }
         }
     }
