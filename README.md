@@ -1,4 +1,6 @@
-# 🎼 Saber Song Patcher
+<img align="left" width="40" height="40" src="Images/patcher.png?raw=true" alt="">
+
+# Saber Song Patcher
 
 Finally an easy way to add and distribute custom songs for Beat Saber without including any copyrighted content!
 
@@ -35,11 +37,17 @@ Here's the process:
 
 ## Screenshots
 
-![Screenshot](Images/gui-screenshot.png?raw=true "GUI Patcher")
+<p align="center">
+ <img src="Images/gui-screenshot.png?raw=true" title="GUI Patcher" alt="Screenshot">
+</p>
 
-![Screenshot](Images/cli-help.png?raw=true "CLI Help")
+<p align="center">
+ <img src="Images/cli-help.png?raw=true" title="CLI Help" alt="Screenshot">
+</p>
 
-![Screenshot](Images/cli-screenshot.png?raw=true "CLI Example")
+<p align="center">
+ <img src="Images/cli-screenshot.png?raw=true" title="CLI Example" alt="Screenshot">
+</p>
 
 ## Config format
 
