@@ -24,13 +24,13 @@ Here's the process:
 1. 🎧 **Mapper** selects a "master" track for the song they are working on
 2. 🎛️ **Mapper** tweaks the timing of the track by trimming, fading in/out, and/or adding silence to the master song
     - This is done via a few lines in the configuration file and can be tested/tweaked as needed
-3. ✌️ **Mapper** runs the **`fingerprint` operation** to store some information about the master track
+3. ⚙️ **Mapper** runs the **`fingerprint` operation** to store some information about the master track
     - Includes the length of the song, a SHA-256 hash of the file, and an [audio fingerprint](https://www.codeproject.com/Articles/206507/Duplicates-detector-via-audio-fingerprinting#fingerprint)
     - In addition to downloading the usual map `.dat` files, and in place of the usual `.ogg`/`.egg` file, we can add the new `audio.json` and `fingerprint.bin`
 
 <br />
 
-4. ⚖️ **User** downloads these files, as well as purchasing or ripping a legal copy of the song
+4. 🎸 **User** downloads these files, as well as purchasing or ripping a legal copy of the song
 5. 🩹 **User** runs **`patch` operation** (or uses the GUI tool) to verify that their copy of the song will work with the map, patch the timings accoring to the config, and finally ensure that the song is converted to `.ogg` format!
     - If the user provides the exact same file as the original master track then the SHA-256 hash will match ✅
     - If the user provides the same exact version of the song but in a different format or bitrate (e.g. purchasing through iTunes instead of Amazon) then the audio fingerprint will still match ✅
