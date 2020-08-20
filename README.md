@@ -72,3 +72,22 @@ Here's the process:
   }
 }
 ```
+
+## Example CLI commands
+
+Example: Save fingerprint information for a master track
+
+```cmd
+rem Supported formats: .mp3, .m4a, .flac, .wma, .wav, etc
+SaberSongPatcherCLI fingerprint --master MasterAudioFile.mp3
+```
+
+Example: Verify and patch input audio
+```cmd
+SaberSongPatcherCLI patch --input AnotherAudioFile.m4a
+```
+
+Example: View help for a command
+```cmd
+SaberSongPatcherCLI patch --help
+```
