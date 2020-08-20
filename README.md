@@ -28,7 +28,7 @@ Here's the process:
     - In addition to downloading the usual map `.dat` files, and in place of the usual `.ogg`/`.egg` file, we can add the new `audio.json` and `fingerprint.bin`
 1. ⚖️ **User** downloads these files, as well as purchasing or ripping a legal copy of the song
 1. 🩹 **User** runs `patch` operation (or uses the GUI tool) to verify that their copy of the song will work with the map, patch the timings accoring to the config, and finally ensure that the song is converted to `.ogg` format!
-    - If the user provides the exact same file as the original master track then the SHA-256 hash will be the same ✅
+    - If the user provides the exact same file as the original master track then the SHA-256 hash will match ✅
     - If the user provides the same exact version of the song but in a different format or bitrate (e.g. purchasing through iTunes instead of Amazon) then the audio fingerprint will still match ✅
     - If the user provides the same song but with incorrect timings the match will fail ❌
     - If the user provides a different rendition of the song the match will fail ❌
