@@ -59,7 +59,7 @@ namespace SaberSongPatcher
                 return false;
             }
             Logger.Info("{file} created in directory {directory}",
-                    output, Path.GetDirectoryName(Path.GetFullPath(output)));
+                    Path.GetFileName(output), Path.GetDirectoryName(Path.GetFullPath(output)));
             return true;
         }
 
@@ -144,7 +144,6 @@ namespace SaberSongPatcher
             string? parameters = ConstructFiltersStringFromPatches();
 
             var extension = Path.GetExtension(input);
-            var fileName = Path.GetFileNameWithoutExtension(input);
 
             if (parameters == null && OUTPUT_EXTENSION.Equals(extension))
             {
@@ -152,7 +151,8 @@ namespace SaberSongPatcher
                 return true;
             }
 
-            return await TransformAudio(input, output ?? $"{fileName}{OUTPUT_EXTENSION}", parameters);
+            return await TransformAudio(input,
+                output ?? Path.ChangeExtension(input, OUTPUT_EXTENSION), parameters);
         }
 
         public Task<bool> TransformInput(string input)

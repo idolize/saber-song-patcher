@@ -62,7 +62,7 @@ namespace SaberSongPatcher
             modelService.Insert(track, fingerprints);
 
             double startAtSecond = context.Config.Fingerprint?.StartAtSecond ?? 0;
-            Logger.Debug("Analyzing {secsToAnalyze} seconds of audio starting at {startAtSecond} seconds",
+            Logger.Debug("Analyzing {secsToAnalyze} seconds of audio starting at {startAtSecond} seconds...",
                 SECONDS_TO_ANALYZE, startAtSecond);
 
             // HACK soundfingerprinting library assumes current directory is always exe directory
@@ -114,7 +114,7 @@ namespace SaberSongPatcher
 
         public async Task<bool> ValidateInput(string queryAudioFile, string? configDirectory)
         {
-            Logger.Info("Validating audio file is correct master track...");
+            Logger.Info("Validating audio file is for correct song...");
             // 1. Check against known good hashes (if any) first as a short circuit
             if (context.Config.KnownGoodHashes.Count > 0)
             {

@@ -58,7 +58,7 @@ namespace SaberSongPatcher.CLI
         static async Task<int> RunFingerprintAndReturnExitCode(FingerprintOptions opts)
         {
             ConfigureLoggers(opts);
-            var config = ConfigParser.ParseConfig(opts.ConfigDirectory, false);
+            var config = ConfigParser.ParseConfig(false, opts.ConfigDirectory);
             var context = new Context(config);
             var hashCalculator = new HashCalculator(context);
 
@@ -78,7 +78,7 @@ namespace SaberSongPatcher.CLI
         static async Task<int> RunPatchAndReturnExitCode(PatchOptions opts)
         {
             ConfigureLoggers(opts);
-            var config = ConfigParser.ParseConfig(opts.ConfigDirectory, true);
+            var config = ConfigParser.ParseConfig(true, opts.ConfigDirectory);
             var context = new Context(config);
             var inputValidator = new InputValidator(context);
             var inputTransformer = new InputTransformer(context);

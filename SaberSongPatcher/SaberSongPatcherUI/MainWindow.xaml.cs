@@ -1,5 +1,4 @@
-﻿//using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -10,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using System.IO;
+using System.Windows.Documents;
+using System.Windows.Media;
 
 namespace SaberSongPatcher.UI
 {
@@ -20,16 +21,74 @@ namespace SaberSongPatcher.UI
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private readonly int logLevel = 2;
+        private bool isDebugMode = false;
 
         public MainWindow(): base()
         {
             InitializeComponent();
-            txtEditor.Text = string.Join("\n", ObservableLogTarget.GetLogs(logLevel));
+            Logger.Info("Select a song to use with this map");
+            RenderAllLogs();
+
             ObservableLogTarget.CollectionChanged += (sender, e) =>
             {
-                txtEditor.Text = string.Join("\n", ObservableLogTarget.GetLogs(logLevel));
+                var added = e.NewItems != null ?
+                    ObservableLogTarget.FilterLogs(
+                        e.NewItems.Cast<ObservableLogTarget.LogEntry>().ToList(),
+                        isDebugMode ? 1 : 2
+                    ) : null;
+                if (added != null && added.Count > 0)
+                {
+                    logEntriesDoc.Blocks.AddRange(added.Select(FormatLogEntry));
+                    richTextBox.ScrollToEnd();
+                }
             };
+        }
+
+        private Paragraph FormatLogEntry(ObservableLogTarget.LogEntry log)
+        {
+            Paragraph myParagraph = new Paragraph();
+            if (isDebugMode)
+            {
+                myParagraph.Inlines.Add(new Run(log.LevelName + '\t')
+                {
+                    Foreground = Brushes.LightGray,
+                });
+            }
+            
+            var run = new Run(log.Message);
+            Inline inline = run;
+            var isSuccess = log.LevelOrdinal == 2 && log.Message.ToLower().StartsWith("success");
+            if (log.LevelOrdinal == 1)
+            {
+                run.Foreground = Brushes.Gray;
+            }
+            if (isSuccess)
+            {
+                run.Foreground = Brushes.Green;
+                inline = new Bold(run);
+            }
+            if (log.LevelOrdinal == 3)
+            {
+                run.Foreground = Brushes.Orange;
+            }
+            if (log.LevelOrdinal >= 4)
+            {
+                run.Foreground = Brushes.DarkRed;
+            }
+            myParagraph.Inlines.Add(inline);
+            return myParagraph;
+        }
+
+        private void RenderAllLogs()
+        {
+            logEntriesDoc.Blocks.Clear();
+            logEntriesDoc.Blocks.AddRange(ObservableLogTarget.GetLogs(isDebugMode ? 1 : 2).Select(FormatLogEntry));
+        }
+
+        private void CkDebug_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            isDebugMode = CkDebug.IsChecked == true;
+            RenderAllLogs();
         }
 
         private void BtnOpenFile_Click(object sender, RoutedEventArgs e)
@@ -54,7 +113,11 @@ namespace SaberSongPatcher.UI
             if (openFileDialog.ShowDialog() == true)
             {
                 // Begin patching
-                Dispatcher.InvokeAsync(() => PerformPatch(openFileDialog.FileName));
+                BtnOpenFile.IsEnabled = false;
+                Dispatcher.InvokeAsync(async () => {
+                    var success = await PerformPatch(openFileDialog.FileName);
+                    BtnOpenFile.IsEnabled = true;
+                });
             }
         }
 
@@ -62,20 +125,24 @@ namespace SaberSongPatcher.UI
         {
             try
             {
-                Config config = null;
+                var possibleConfigFolder = Path.GetDirectoryName(inputFile);
+                Config config;
                 try
                 {
-                    config = ConfigParser.ParseConfig(true);
+                    config = ConfigParser.ParseConfig(true, possibleConfigFolder);
                 }
                 catch (FileNotFoundException ex)
                 {
-                    OpenFileDialog openFileDialog = new OpenFileDialog();
-                    openFileDialog.Title = "Select config file for song";
-                    openFileDialog.Filter = $"Audio config files (*.json)|*.json";
-                    openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    OpenFileDialog openFileDialog = new OpenFileDialog
+                    {
+                        Title = "Select config file for song",
+                        Filter = $"Audio config files (*.json)|*.json",
+                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal)
+                    };
                     if (openFileDialog.ShowDialog() == true)
                     {
-                        config = ConfigParser.ParseConfig(openFileDialog.FileName, true);
+                        config = ConfigParser.ParseConfig(true, openFileDialog.FileName);
+                        possibleConfigFolder = Path.GetDirectoryName(openFileDialog.FileName);
                     }
                     else
                     {
@@ -90,13 +157,15 @@ namespace SaberSongPatcher.UI
                 bool? seemsCorrect;
                 try
                 {
-                    seemsCorrect = await inputValidator.ValidateInput(inputFile);
+                    seemsCorrect = await inputValidator.ValidateInput(inputFile, possibleConfigFolder);
                 }
                 catch (FileNotFoundException ex)
                 {
-                    OpenFileDialog openFileDialog = new OpenFileDialog();
-                    openFileDialog.Title = "Select fingerprint file for song";
-                    openFileDialog.Filter = $"Fingerprint files (*.bin)|*.bin";
+                    OpenFileDialog openFileDialog = new OpenFileDialog
+                    {
+                        Title = "Select fingerprint file for song",
+                        Filter = $"Fingerprint files (*.bin)|*.bin"
+                    };
                     if (openFileDialog.ShowDialog() == true)
                     {
                         seemsCorrect = await inputValidator.ValidateInput(inputFile, openFileDialog.FileName);

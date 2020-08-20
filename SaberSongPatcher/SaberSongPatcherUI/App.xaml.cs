@@ -17,7 +17,7 @@ namespace SaberSongPatcher.UI
 
 		private void Application_Startup(object sender, StartupEventArgs e)
 		{
-			Logger.Info("Initialized");
+			Logger.Debug("Application started");
 			// Create the startup window
 			MainWindow wnd = new MainWindow();
 			// Do stuff here, e.g. to the window

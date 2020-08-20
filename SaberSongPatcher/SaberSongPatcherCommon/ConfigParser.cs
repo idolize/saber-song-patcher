@@ -23,7 +23,7 @@ namespace SaberSongPatcher
             Formatting = Formatting.Indented
         };
 
-        public static Config ParseConfig(string? configDirectory, bool strict)
+        public static Config ParseConfig(bool strict, string? configDirectory)
         {
             Logger.Debug("Parsing config file...");
 
@@ -89,7 +89,7 @@ namespace SaberSongPatcher
 
         public static Config ParseConfig(bool strict)
         {
-            return ParseConfig(null, strict);
+            return ParseConfig(strict, null);
         }
 
         public static void FlushConfigChanges(Config config, string? configDirectory)

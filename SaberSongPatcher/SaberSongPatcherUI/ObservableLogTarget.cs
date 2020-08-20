@@ -54,9 +54,14 @@ namespace SaberSongPatcher.UI
             return list;
         }
 
+        public static IReadOnlyList<LogEntry> FilterLogs(IReadOnlyList<LogEntry> entries, int level)
+        {
+            return entries.Where(log => log.LevelOrdinal >= level).ToList();
+        }
+
         public static IReadOnlyList<LogEntry> GetLogs(int level)
         {
-            return list.Where(log => log.LevelOrdinal >= level).ToList();
+            return FilterLogs(GetLogs(), level);
         }
 
         public static void Clear()
