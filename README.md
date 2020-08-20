@@ -35,7 +35,7 @@ Here's the process:
 
 ## Screenshots
 
-![Screenshot](Images/gui-screenshot?raw=true "GUI Patcher")
+![Screenshot](Images/gui-screenshot.png?raw=true "GUI Patcher")
 
 ![Screenshot](Images/cli-screenshot.png?raw=true "CLI Example")
 
