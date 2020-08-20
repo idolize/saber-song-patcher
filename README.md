@@ -33,9 +33,13 @@ Here's the process:
     - If the user provides the same song but with incorrect timings the match will fail ❌
     - If the user provides a different rendition of the song the match will fail ❌
 
-## How to
+## Screenshots
 
-TODO
+![Screenshot](Images/gui-screenshot?raw=true "GUI Patcher")
+
+![Screenshot](Images/cli-screenshot.png?raw=true "CLI Example")
+
+![Screenshot](Images/cli-help.png?raw=true "CLI Help")
 
 ## Config format
 

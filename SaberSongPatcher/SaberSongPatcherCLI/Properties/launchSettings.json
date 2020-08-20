@@ -2,7 +2,7 @@
   "profiles": {
     "SaberSongPatcher": {
       "commandName": "Project",
-      "commandLineArgs": "patch --input Ocean.mp3 -v",
+      "commandLineArgs": "--help",
       "workingDirectory": "C:\\Users\\David"
     }
   }
