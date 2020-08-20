@@ -5,6 +5,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
+    <RootNamespace>SaberSongPatcher.UI</RootNamespace>
+    <Authors>David Idol</Authors>
+    <ApplicationIcon>patcher_win.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

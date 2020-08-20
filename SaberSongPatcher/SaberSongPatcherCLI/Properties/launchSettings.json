@@ -2,8 +2,7 @@
   "profiles": {
     "SaberSongPatcher": {
       "commandName": "Project",
-      "commandLineArgs": "--help",
-      "workingDirectory": "C:\\Users\\David"
+      "commandLineArgs": "--help"
     }
   }
 }

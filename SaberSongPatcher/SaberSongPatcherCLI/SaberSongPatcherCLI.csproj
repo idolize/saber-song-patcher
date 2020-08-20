@@ -5,6 +5,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
     <Authors>David Idol</Authors>
+    <RootNamespace>SaberSongPatcher.CLI</RootNamespace>
+    <AssemblyName>SaberSongPatcher</AssemblyName>
+    <ApplicationIcon>patcher_win.ico</ApplicationIcon>
+    <PackageId>SaberSongPatcher</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
