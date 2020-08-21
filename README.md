@@ -4,6 +4,8 @@
 
 > Add and distribute custom songs for Beat Saber without including any copyrighted content!
 
+**<p align="center">[Download here!](https://github.com/Assistant/ModAssistant/releases/latest)</span>**
+
 ## Background
 
 Read [this blog post by Shane Monroe](https://medium.com/@darkuni/beat-saber-why-custom-maps-cannot-be-made-with-legal-music-9e68a01cfd42) for a good description of the problem.
