@@ -19,9 +19,15 @@ Read [this blog post by Shane Monroe](https://medium.com/@darkuni/beat-saber-why
 
 ## Solution
 
-This tool comes with both a commandline and a GUI application to assist in (1) distributing custom maps without copyrighted data and (2) quickly and reliably using these maps by providing your own legally purchases/ripped copy of the song
+This tool comes with *both a commandline and a GUI application* to assist in **(1)** distributing custom maps without copyrighted data and **(2)** quickly and reliably using these maps by providing your own legally purchases/ripped copy of the song.
 
-Here's the process:
+### How does it work?
+
+Using [audio fingerprinting technology](https://www.codeproject.com/Articles/206507/Duplicates-detector-via-audio-fingerprinting#fingerprint) (similar to how applications like Shazam work) the tool can verify characteristics of the audio file to be sure they match the original song without needing the files to be identical.
+
+And even if the song matches, it also verifies the timings are correct so there won't be synchronization issues with the map. You can simply select the song from your library (or download it from a legitimate source) and it will Just Work™!
+
+### Here's the full process:
 
 1. 🎧 **Mapper** selects a "master" track for the song they are working on
 2. 🎛️ **Mapper** tweaks the timing of the track by trimming, fading in/out, and/or adding silence to the master song
@@ -71,7 +77,7 @@ Here's the process:
   "knownGoodHashes": [
     { "type": "sha256", "hash": "xxxxx" }
   ],
-  // Audio changes to apply to the master track before use with the map
+  // Any optional audio changes to apply to the master track before use with the map
   "patches": {
     "delayStartMs": 5000,
     "padEndMs": 5000,
