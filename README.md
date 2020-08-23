@@ -1,4 +1,4 @@
-<img align="right" width="130" height="130" src="Images/patcher.png?raw=true" alt="">
+<img align="right" width="150" height="150" src="Images/patcher.png?raw=true" alt="">
 
 # Saber Song Patcher
 
