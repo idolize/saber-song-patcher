@@ -4,7 +4,7 @@
 
 > Add and distribute custom songs for Beat Saber without including any copyrighted content!
 
-### [Download here!](https://github.com/idolize/saber-song-patcher/releases/latest)
+### [📥 Download here!](https://github.com/idolize/saber-song-patcher/releases/latest)
 
 ## Background
 
