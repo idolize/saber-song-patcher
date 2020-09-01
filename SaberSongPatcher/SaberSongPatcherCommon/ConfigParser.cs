@@ -23,12 +23,12 @@ namespace SaberSongPatcher
             Formatting = Formatting.Indented
         };
 
-        public static Config ParseConfig(bool strict, string? configDirectory)
+        public static Config ParseConfig(bool strict, string configDirectory)
         {
             Logger.Debug("Parsing config file...");
 
             var filePath = Path.HasExtension(configDirectory) ?
-                configDirectory : Path.Join(configDirectory, Config.CONFIG_FILE);
+                configDirectory : Path.Combine(configDirectory, Config.CONFIG_FILE);
             if (!File.Exists(filePath))
             {
                 if (strict)
@@ -44,7 +44,7 @@ namespace SaberSongPatcher
             }
 
             JSchema schema;
-            var schemaFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!,
+            var schemaFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                 Config.CONFIG_SCHEMA_FILE);
             using (StreamReader file = File.OpenText(schemaFile))
             using (JsonTextReader reader = new JsonTextReader(file))
@@ -66,7 +66,7 @@ namespace SaberSongPatcher
                 validatingReader.ValidationEventHandler += (o, a) => validationMessages.Add(a.Message);
                 try
                 {
-                    var config = serializer.Deserialize<Config>(validatingReader)!;
+                    var config = serializer.Deserialize<Config>(validatingReader);
                     if (validationMessages.Count > 0)
                     {
                         throw new JsonReaderException();
@@ -92,13 +92,13 @@ namespace SaberSongPatcher
             return ParseConfig(strict, null);
         }
 
-        public static void FlushConfigChanges(Config config, string? configDirectory)
+        public static void FlushConfigChanges(Config config, string configDirectory)
         {
             if (config.IsChanged)
             {
                 Logger.Info("Updating config...");
 
-                var filePath = Path.Join(configDirectory, Config.CONFIG_FILE);
+                var filePath = Path.Combine(configDirectory, Config.CONFIG_FILE);
                 if (File.Exists(filePath))
                 {
                     Logger.Debug("Deleting existing config at {filePath}", filePath);

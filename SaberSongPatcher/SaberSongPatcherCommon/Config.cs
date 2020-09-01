@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace SaberSongPatcher
@@ -26,12 +25,12 @@ namespace SaberSongPatcher
             [JsonProperty("hash")]
             public string Hash { get; set; } = string.Empty;
 
-            public override bool Equals([AllowNull] object obj)
+            public override bool Equals(object obj)
             {
                 return Equals(obj as KnownGoodHash);
             }
 
-            public bool Equals([AllowNull] KnownGoodHash other)
+            public bool Equals(KnownGoodHash other)
             {
                 return other != null &&
                        Hash == other.Hash;
@@ -39,7 +38,7 @@ namespace SaberSongPatcher
 
             public override int GetHashCode()
             {
-                return HashCode.Combine(Hash);
+                return Hash.GetHashCode();
             }
         }
 
@@ -70,13 +69,13 @@ namespace SaberSongPatcher
             public int? PadEndMs { get; set; }
 
             [JsonProperty("trim")]
-            public PatchTrimDuration? Trim { get; set; }
+            public PatchTrimDuration Trim { get; set; }
 
             [JsonProperty("fadeIn")]
-            public PatchFadeDuration? FadeIn { get; set; }
+            public PatchFadeDuration FadeIn { get; set; }
 
             [JsonProperty("fadeOut")]
-            public PatchFadeDuration? FadeOut { get; set; }
+            public PatchFadeDuration FadeOut { get; set; }
 
             public bool HasPatches()
             {
@@ -104,7 +103,7 @@ namespace SaberSongPatcher
         public IList<string> DownloadUrls { get; set; } = new List<string>();
 
         [JsonProperty("fingerprint")]
-        public FingerprintConfig? Fingerprint { get; set; }
+        public FingerprintConfig Fingerprint { get; set; }
 
         [JsonProperty("knownGoodHashes")]
         public IList<KnownGoodHash> KnownGoodHashes { get; set; } = new List<KnownGoodHash>();

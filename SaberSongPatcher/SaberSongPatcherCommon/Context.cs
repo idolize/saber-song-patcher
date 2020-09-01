@@ -19,7 +19,7 @@ namespace SaberSongPatcher
         {
             Config = new Config();
             OrigWorkingDirectory = Directory.GetCurrentDirectory();
-            ExeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+            ExeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             FFmpegRootPath = Path.Combine(ExeDirectory, "FFmpeg\\bin\\x64");
             // Set directory where the app should look for FFmpeg executables
             // based on https://github.com/AddictedCS/soundfingerprinting/wiki/Supported-Audio-Formats

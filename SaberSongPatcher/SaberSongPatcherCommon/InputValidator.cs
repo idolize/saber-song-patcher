@@ -34,7 +34,7 @@ namespace SaberSongPatcher
             this.context = context;
         }
 
-        private async Task<bool> CheckFingerprint(string queryAudioFile, string? configDirectory)
+        private async Task<bool> CheckFingerprint(string queryAudioFile, string configDirectory)
         {
             IModelService modelService = new InMemoryModelService(); // store fingerprints in RAM
             IAudioService audioService = new FFmpegAudioService();
@@ -44,7 +44,7 @@ namespace SaberSongPatcher
 
             Hashes fingerprints;
             var filePath = Path.HasExtension(configDirectory) ?
-                configDirectory : Path.Join(configDirectory, HashCalculator.FINGERPRINT_FILE);
+                configDirectory : Path.Combine(configDirectory, HashCalculator.FINGERPRINT_FILE);
             try
             {
                 using (var file = File.OpenRead(filePath))
@@ -112,7 +112,7 @@ namespace SaberSongPatcher
             return meetsConfidenceThreshold && meetsCoverageThreshold && meetsTrackStartOffsetThreshold;
         }
 
-        public async Task<bool> ValidateInput(string queryAudioFile, string? configDirectory)
+        public async Task<bool> ValidateInput(string queryAudioFile, string configDirectory)
         {
             Logger.Info("Validating audio file is for correct song...");
             // 1. Check against known good hashes (if any) first as a short circuit

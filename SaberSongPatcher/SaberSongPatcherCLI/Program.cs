@@ -29,7 +29,7 @@ namespace SaberSongPatcher.CLI
             [Option('i', "input", Required = true, HelpText = "Input song file (supports most codecs).")]
             public string InputFile { get; set; } = string.Empty;
 
-            [Option('o', "output", Required = false, HelpText = "Name of output file (defaults to {input}.ogg).")]
+            [Option('o', "output", Required = false, HelpText = "Name of output file (defaults to {input}.egg).")]
             public string? OutputFile { get; set; }
         }
 

@@ -1,10 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Nullable>enable</Nullable>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>David Idol</Authors>
     <RootNamespace>SaberSongPatcher</RootNamespace>
+    <ApplicationIcon>patcher_win.ico</ApplicationIcon>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>SaberSongPatcher</PackageId>
+    <Description>Add and distribute custom songs for Beat Saber without including any copyrighted content!
+
+Assists in (1) distributing custom maps without copyrighted data and (2) quickly and reliably using these maps by providing your own legally purchases/ripped copy of the song.
+
+https://medium.com/@idolize/beat-saber-the-future-of-custom-songs-d64756818be7</Description>
+    <RepositoryUrl>https://github.com/idolize/saber-song-patcher.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/idolize/saber-song-patcher</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>patcher.png</PackageIcon>
+    <PackageTags>beatsaber beat saber song patcher fingerprint audio</PackageTags>
+    <Company />
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +44,10 @@
   <ItemGroup>
     <None Update="audio.schema.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Images\patcher.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
     </None>
   </ItemGroup>
 

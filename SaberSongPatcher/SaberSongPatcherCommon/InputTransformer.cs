@@ -14,7 +14,7 @@ namespace SaberSongPatcher
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static readonly string OUTPUT_EXTENSION = ".ogg"; // TODO use .egg?
+        private static readonly string OUTPUT_EXTENSION = ".egg";
 
         private readonly Context context;
 
@@ -23,7 +23,7 @@ namespace SaberSongPatcher
             this.context = context;
         }
 
-        public async Task<bool> TransformAudio(string input, string output, string? parameters)
+        public async Task<bool> TransformAudio(string input, string output, string parameters)
         {
             if (File.Exists(output))
             {
@@ -33,8 +33,7 @@ namespace SaberSongPatcher
             }
 
             IMediaInfo info = await FFmpegApi.GetMediaInfo(input);
-            IStream? audioStream = info.AudioStreams.FirstOrDefault()
-                ?.SetCodec(AudioCodec.libvorbis);
+            IStream audioStream = info.AudioStreams.FirstOrDefault().SetCodec(AudioCodec.libvorbis);
 
             if (audioStream == null)
             {
@@ -69,7 +68,7 @@ namespace SaberSongPatcher
             return $"{filterName}={parametersString}";
         }
 
-        public string? ConstructFiltersStringFromPatches()
+        public string ConstructFiltersStringFromPatches()
         {
             var patches = context.Config.Patches;
             if (patches.HasPatches())
@@ -136,12 +135,12 @@ namespace SaberSongPatcher
             return null;
         }
 
-        public async Task<bool> TransformInput(string input, string? output)
+        public async Task<bool> TransformInput(string input, string output)
         {
             Logger.Info("Transforming master audio file to match output...");
 
             // Apply patches from config and convert to OGG
-            string? parameters = ConstructFiltersStringFromPatches();
+            string parameters = ConstructFiltersStringFromPatches();
 
             var extension = Path.GetExtension(input);
 
