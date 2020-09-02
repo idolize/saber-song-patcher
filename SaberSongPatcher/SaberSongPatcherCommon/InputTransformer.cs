@@ -25,13 +25,6 @@ namespace SaberSongPatcher
 
         public async Task<bool> TransformAudio(string input, string output, string parameters)
         {
-            if (File.Exists(output))
-            {
-                // Overwrite the file
-                Logger.Debug("Deleting existing output file {output}", output);
-                File.Delete(output);
-            }
-
             IMediaInfo info = await FFmpegApi.GetMediaInfo(input);
             IStream audioStream = info.AudioStreams.FirstOrDefault().SetCodec(AudioCodec.libvorbis);
 
@@ -41,11 +34,19 @@ namespace SaberSongPatcher
                 return false;
             }
 
+            var oggFileOut = Path.ChangeExtension(output, ".ogg");
+            if (File.Exists(oggFileOut))
+            {
+                // Overwrite the file
+                Logger.Debug("Deleting existing output file {output}", oggFileOut);
+                File.Delete(oggFileOut);
+            }
+
             try
             {
                 IConversion conversion = FFmpegApi.Conversions.New()
                     .AddStream(audioStream)
-                    .SetOutput(output);
+                    .SetOutput(oggFileOut);
                 if (parameters != null)
                 {
                     conversion = conversion.AddParameter(parameters);
@@ -57,6 +58,15 @@ namespace SaberSongPatcher
                 Logger.Debug(ex);
                 return false;
             }
+
+            if (File.Exists(output))
+            {
+                // Overwrite the file
+                Logger.Debug("Deleting existing output file {output}", output);
+                File.Delete(output);
+            }
+
+            File.Move(oggFileOut, output);
             Logger.Info("{file} created in directory {directory}",
                     Path.GetFileName(output), Path.GetDirectoryName(Path.GetFullPath(output)));
             return true;
@@ -144,9 +154,9 @@ namespace SaberSongPatcher
 
             var extension = Path.GetExtension(input);
 
-            if (parameters == null && OUTPUT_EXTENSION.Equals(extension))
+            if (parameters == null && (extension == "ogg" || extension == "egg"))
             {
-                Logger.Debug("Audio input already in {ext} format", OUTPUT_EXTENSION);
+                Logger.Debug("Audio input already in {ext} format", extension);
                 return true;
             }
 

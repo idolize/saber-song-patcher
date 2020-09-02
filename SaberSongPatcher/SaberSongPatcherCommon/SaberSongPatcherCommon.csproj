@@ -19,6 +19,7 @@ https://medium.com/@idolize/beat-saber-the-future-of-custom-songs-d64756818be7</
     <PackageIcon>patcher.png</PackageIcon>
     <PackageTags>beatsaber beat saber song patcher fingerprint audio</PackageTags>
     <Company />
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,20 +32,19 @@ https://medium.com/@idolize/beat-saber-the-future-of-custom-songs-d64756818be7</
     <PackageReference Include="Xabe.FFmpeg" Version="4.1.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="FFmpeg\bin\x64" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="FFmpeg\**">
+  <ItemGroup Label="FilesToCopy">
+    <Content Include="SaberSongPatcher.targets" PackagePath="build/SaberSongPatcher.targets" />
+    <Content Include="FFmpeg/**/*.*" Pack="true" PackagePath="contentFiles\FFmpeg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+    </Content>
+    <Content Include="audio.schema.json" Pack="true" PackagePath="contentFiles">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="audio.schema.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="..\..\Images\patcher.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

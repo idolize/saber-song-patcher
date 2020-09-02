@@ -89,7 +89,7 @@ namespace SaberSongPatcher
 
         public static Config ParseConfig(bool strict)
         {
-            return ParseConfig(strict, null);
+            return ParseConfig(strict, string.Empty);
         }
 
         public static void FlushConfigChanges(Config config, string configDirectory)
@@ -119,7 +119,7 @@ namespace SaberSongPatcher
 
         public static void FlushConfigChanges(Config config)
         {
-            FlushConfigChanges(config, null);
+            FlushConfigChanges(config, string.Empty);
         }
     }
 }

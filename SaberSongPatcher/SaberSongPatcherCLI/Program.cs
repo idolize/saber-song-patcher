@@ -20,7 +20,7 @@ namespace SaberSongPatcher.CLI
             public bool Verbose { get; set; } = false;
 
             [Option('c', "config", Required = false, HelpText = "Folder where audio.json config file exists.")]
-            public string? ConfigDirectory { get; set; }
+            public string ConfigDirectory { get; set; } = string.Empty;
         }
 
         [Verb("patch", HelpText = "Verify, patch, and convert the input audio file for use.")]

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using SoundFingerprinting;
-using SoundFingerprinting.Audio;
 using SoundFingerprinting.InMemory;
 using SoundFingerprinting.Builder;
 using SoundFingerprinting.Data;
@@ -37,7 +36,6 @@ namespace SaberSongPatcher
         private async Task<bool> CheckFingerprint(string queryAudioFile, string configDirectory)
         {
             IModelService modelService = new InMemoryModelService(); // store fingerprints in RAM
-            IAudioService audioService = new FFmpegAudioService();
 
             // Load the serialized fingerprint hashes from disk
             // https://github.com/protobuf-net/protobuf-net#3-deserialize-your-data
@@ -75,10 +73,14 @@ namespace SaberSongPatcher
                 queryResult = await QueryCommandBuilder.Instance.BuildQueryCommand()
                                                      .From(queryAudioFullPath, SECONDS_TO_ANALYZE, startAtSecond)
                                                      .WithQueryConfig(new LowLatencyQueryConfiguration())
-                                                     .UsingServices(modelService, audioService)
+                                                     .UsingServices(modelService, new FFmpegAudioService())
                                                      .Query();
             }
-            finally
+            catch (DllNotFoundException ex)
+            {
+                Logger.Error(ex, "Unable to find ffmpeg DLLs: {message}", ex.Message);
+                throw ex;
+            } finally
             {
                 Directory.SetCurrentDirectory(prevCurrentDirectory);
             }
@@ -163,7 +165,7 @@ namespace SaberSongPatcher
 
         public Task<bool> ValidateInput(string queryAudioFile)
         {
-            return ValidateInput(queryAudioFile, null);
+            return ValidateInput(queryAudioFile, string.Empty);
         }
     }
 }
